@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('parent_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->string('name');
-            $table->string('slug'); 
+            $table->string('slug')->unique(); 
+            $table->enum('gender', ['women', 'men', 'unisex'])->default('unisex');
             $table->timestamps();
         });
     }
