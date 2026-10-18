@@ -21,6 +21,13 @@ return new class extends Migration
             $table->decimal('base_price', 10, 2);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->index('category_id');
+            $table->index('supplier_id');
+            $table->index('base_price');
+            $table->index('name');
+
+            $table->index('is_active');
    
         });
     }

@@ -20,6 +20,10 @@ return new class extends Migration
             $table->decimal('price', 10,2)->nullable();
             $table->integer('stock_quantity');
             $table->timestamps();
+
+            $table->index('product_id');
+            $table->index('size');
+            $table->index('color');
  
         });
     }

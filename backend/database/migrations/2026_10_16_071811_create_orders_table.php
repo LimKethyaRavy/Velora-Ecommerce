@@ -16,9 +16,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->nullOnDelete();
             $table->decimal('total_amount', 10,2);
             $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled']);
-            $table->foreignId('payment_status')->constrained('payments')->nullOnDelete();
+            $table->enum('payment_status', ['paid', 'pending', 'refunded']);
             $table->text('shipping_address');
             $table->timestamps();
+
+            $table->index('user_id');
+            $table->index('status');
+            $table->index('payment_status');
         });
     }
 

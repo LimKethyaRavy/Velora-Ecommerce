@@ -34,11 +34,11 @@ class Orders extends Model
         return $this->hasOne(Payments:: class, 'order_id')->latestOfMany();
     }
 
-    public function paymentStatus(){
+    // public function paymentStatus(){
 
-    return $this->hasMany(Payments::class, 'payment_status');
+    // return $this->hasMany(Payments::class, 'payment_status');
 
-    }
+    // }
 
     public function shipping(){
 

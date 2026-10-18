@@ -18,6 +18,10 @@ return new class extends Migration
             $table->string('slug')->unique(); 
             $table->enum('gender', ['women', 'men', 'unisex'])->default('unisex');
             $table->timestamps();
+
+            $table->index('parent_id');
+            $table->index('name');
+            $table->index('gender');
         });
     }
 
