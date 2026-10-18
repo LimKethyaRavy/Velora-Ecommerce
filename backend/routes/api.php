@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SupplierController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,12 +21,23 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::get('/suppliers', [SupplierController::class, 'index'])->name('suppliers.index');
+Route::get('/suppliers/all', [SupplierController::class, 'index'])->name('suppliers.index');
 
 Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
 
 Route::put('/suppliers/{id}', [SupplierController:: class, 'update'])->name('suppliers.update');
 
-Route::get('/suppliers', [SupplierController::class, 'show'])->name('suppliers.show');
+Route::get('/suppliers/show/{id}', [SupplierController::class, 'show'])->name('suppliers.show');
 
-Route::delete('/suppliers/{id}', [SupplierController::class, 'destory'])->name('suppliers.destory');
+Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+
+
+Route::prefix('categories')->group(function () {
+
+    Route::get('/' , [CategoryController::class, 'index']);
+    Route::post('/', [CategoryController::class, 'store']);
+    Route::put('/{id}', [CategoryController::class, 'update']);
+    Route::get('/{id}', [CategoryController::class, 'show']);
+    Route::delete('/{id}', [CategoryController::class, 'destory']);
+    
+});

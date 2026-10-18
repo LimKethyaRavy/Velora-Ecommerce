@@ -76,7 +76,7 @@ class SupplierController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'contact_name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:suppliers, email',
+            'email' => 'nullable|email|unique:suppliers,email',
             'phone' => 'nullable|string',
             'address' => 'nullable|string'
         ]);
