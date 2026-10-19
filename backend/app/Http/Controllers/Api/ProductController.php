@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\Products;
 use Exception;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Products::with(['category', 'suppliers']);
+        $query = Product::with(['category', 'suppliers']);
 
         if ($request->filled('category_id')) {
 
@@ -45,7 +46,7 @@ class ProductController extends Controller
         try {
             $validated = $request->validate([
                 'category_id' => 'required|exists:categories,id',
-                'supplier_id' => 'required|exists:supplier,id',
+                'supplier_id' => 'required|exists:suppliers,id',
                 'name' => 'required|string|max:255',
                 'slug' => 'required|string|max:155',
                 'description' => 'required|string|max:255',
@@ -53,7 +54,7 @@ class ProductController extends Controller
                 'is_active' => 'boolean'
             ]);
 
-            $prodcut = Products::create($validated);
+            $prodcut = Product::create($validated);
 
             return response()->json([
                 'success' => true,
@@ -73,7 +74,7 @@ class ProductController extends Controller
 
     public function show(string $id)
     {
-        $prodcut = Products::with(['category', 'suppliers', 'product_variants', 'product_image'])->findOrFail($id);
+        $prodcut = Product::with(['category', 'suppliers', 'product_variants', 'product_image'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -86,7 +87,7 @@ class ProductController extends Controller
     {
         try {
 
-            $prodcut = Products::findOrFail($id);
+            $prodcut = Product::findOrFail($id);
 
             $validated = $request->validate([
                 'category_id' => 'required|exists:categories,id',
@@ -116,7 +117,7 @@ class ProductController extends Controller
 
     public function destroy(string $id)
     {
-        $prodcut = Products::findOrFail($id);
+        $prodcut = Product::findOrFail($id);
 
         if ($prodcut->is_active) {
             return response()->json([
