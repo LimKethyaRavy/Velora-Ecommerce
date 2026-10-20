@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SupplierController;
+use App\Models\Product_Variants;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -50,4 +52,19 @@ Route::prefix('product')->group(function () {
     Route::get('/{id}', [ProductController::class, 'show']);
     Route::put('/update/{id}', [ProductController::class, 'update']);
     Route::delete('/delete/{id}', [ProductController::class, 'destroy']);
+});
+
+Route::prefix('variant')->group(function() {
+
+    Route::get('/', [ProductVariantController::class, 'index']);
+
+    Route::post('/', [ProductVariantController::class, 'store']);
+
+    Route::get('/{id}', [ProductVariantController::class, 'show']);
+
+    Route::put('/update/{id}', [ProductVariantController::class, 'update']);
+
+    Route::delete('/delete/{id}', [ProductVariantController::class, 'destroy']);
+
+
 });

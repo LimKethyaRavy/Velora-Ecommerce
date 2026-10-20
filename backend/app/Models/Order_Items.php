@@ -25,7 +25,7 @@ class Order_Items extends Model
 
     public function variants(){
 
-    return $this->belongsTo(Product_Variants::class, 'product_variant_id');
+    return $this->belongsTo(Product_Variant::class, 'product_variant_id');
 
     }
 

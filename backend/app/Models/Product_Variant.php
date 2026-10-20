@@ -5,9 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Product_Variants extends Model
+class Product_Variant extends Model
 {
     use HasFactory;
+
+    protected $table = 'product_variants'; 
+    protected $guarded = [];
+
+
 
     protected $fillable = [
 
@@ -28,13 +33,13 @@ class Product_Variants extends Model
 
     public function orderItems(){
 
-        return $this->hasMany(Product_Variants::class, 'product_variant_id');
+        return $this->hasMany(Product_Variant::class, 'product_variant_id');
 
     }
 
     public function images(){
 
-    return $this->hasMany(Product_Variants:: class, 'variant_id');
+    return $this->hasMany(Product_Variant:: class, 'variant_id');
 
     }
 

@@ -24,36 +24,33 @@ class Product extends Model
         'is_active' => 'boolean'
     ];
 
-    public function Category(){
+    public function Category()
+    {
 
-    return $this->belongsTo(Category::class, 'category_id');
-
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function supplier(){
+    public function supplier()
+    {
 
-    return $this->belongsTo(Suppliers::class, 'supplier_id');
-
+        return $this->belongsTo(Suppliers::class, 'supplier_id');
     }
 
-    public function variant(){
+    public function variant()
+    {
 
-    return $this->hasMany(Product_Variants::class, 'product_id');
-
+        return $this->hasMany(Product_Variant::class, 'product_id');
     }
 
-    public function image(){
+    public function image()
+    {
 
-    return $this->hasMany(Product_image::class, 'product_id');
-
+        return $this->hasMany(Product_image::class, 'product_id');
     }
 
-    public function primaryImage(){
-
-    return $this->hasOne(Product_image::class,'primary_image')->where('is_primary', true);
-
+    public function primaryImage()
+    {
+        return $this->hasOne(Product_image::class, 'product_id')
+            ->where('is_primary', true);
     }
-
-    
-
 }
