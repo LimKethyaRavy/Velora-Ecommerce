@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductImageController;
 use App\Http\Controllers\Api\ProductVariantController;
 use App\Http\Controllers\Api\SupplierController;
 use App\Models\Product_Variants;
@@ -66,5 +67,21 @@ Route::prefix('variant')->group(function() {
 
     Route::delete('/delete/{id}', [ProductVariantController::class, 'destroy']);
 
+
+});
+
+
+Route::prefix('image')->group(function() {
+
+    Route::get('/', [ProductImageController::class, 'index']);
+
+    Route::post('/', [ProductImageController::class, 'store']);
+
+    Route::get('/{id}', [ProductImageController::class, 'show']);
+
+    Route::put('/update/{id}', [ProductImageController::class, 'update']);
+
+    Route::delete('/delete/{id}', [ProductImageController::class, 'destroy']);
+    
 
 });
