@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+
+use App\Models\Suppliers;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,11 +14,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        $suppliers = [];
 
-        // \App\Models\User::factory()->create([
-        //     'name' => 'Test User',
-        //     'email' => 'test@example.com',
-        // ]);
+        for($i = 1; $i <= 10; $i++){
+            $suppliers[] = Suppliers::create([
+                'name' => "Supplier Atelier $i",
+                'contact_name' => fake()->name(),
+                'email' => fake()->unique()->safeEmail(),
+                'phone' => fake()->unique()->phoneNumber(),
+                'address' => fake()->address(),
+                'is_active' => fake()->is_bool()
+            ]);
+        }
+
+        $gender = ['Men', 'Women', 'Unisex'];
+        
     }
 }
