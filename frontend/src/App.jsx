@@ -27,7 +27,7 @@ const App = () => {
 
           <Route path='/admin' element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path='products' element={<ProductFeature />} />
+            <Route path='products' element={<ProductFeature/>} />
             <Route path='suppliers' element={<Supplier/>} />
             <Route path='categories' element={<Category/>} />
             <Route path='orders' element={<AdminSection title='Orders' />} />
