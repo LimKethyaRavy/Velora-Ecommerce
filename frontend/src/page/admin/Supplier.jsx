@@ -2,7 +2,11 @@ import React from 'react'
 
 const Supplier = () => {
   return (
-    <div>Supplier</div>
+    <div>
+      <div className=''>
+s
+      </div>
+    </div>
   )
 }
 

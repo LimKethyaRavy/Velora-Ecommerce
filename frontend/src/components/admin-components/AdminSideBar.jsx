@@ -67,19 +67,29 @@ const badgeStyles = {
 
 const AdminSideBar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
+  const [isMobile, setIsMobile] = React.useState(
+    () => window.matchMedia("(max-width: 1023px)").matches
+  );
 
   // Close sidebar when route changes
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname, setIsOpen]);
 
-  // Prevent background scrolling on mobile
+  // Keep the offcanvas inaccessible and the page scroll-locked only on mobile.
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
+    const originalOverflow = document.body.style.overflow;
 
     const updateScrollLock = () => {
-      document.body.style.overflow =
-        isOpen && mediaQuery.matches ? "hidden" : "";
+      setIsMobile(mediaQuery.matches);
+      document.body.style.overflow = isOpen && mediaQuery.matches
+        ? "hidden"
+        : originalOverflow;
+
+      if (!mediaQuery.matches && isOpen) {
+        setIsOpen(false);
+      }
     };
 
     updateScrollLock();
@@ -87,12 +97,11 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
     mediaQuery.addEventListener("change", updateScrollLock);
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = originalOverflow;
       mediaQuery.removeEventListener("change", updateScrollLock);
     };
-  }, [isOpen]);
+  }, [isOpen, setIsOpen]);
 
-  // Close sidebar with Escape key
   useEffect(() => {
     if (!isOpen) return;
 
@@ -111,26 +120,20 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={() => setIsOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
+     
       {/* Sidebar */}
       <aside
         id="admin-sidebar"
         aria-label="Admin navigation"
+        aria-hidden={isMobile && !isOpen}
+        inert={isMobile && !isOpen}
         className={`
           fixed inset-y-0 left-0 z-50
           flex h-dvh w-64 flex-col
           border-r border-gray-200 bg-white
           transition-transform duration-300 ease-in-out
 
-          lg:sticky lg:top-0 lg:z-30 lg:h-screen
+          lg:static lg:z-auto lg:h-screen
           lg:shrink-0 lg:translate-x-0
 
           ${
@@ -140,7 +143,7 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
           }
         `}
       >
-        {/* Logo */}
+     
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-5">
           <div>
             <h1 className="font-serif text-2xl leading-none tracking-wide text-black">
@@ -152,7 +155,7 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
             </p>
           </div>
 
-          {/* Mobile Close Button */}
+ 
           <button
             type="button"
             onClick={() => setIsOpen(false)}
@@ -163,13 +166,14 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
           </button>
         </div>
 
-        {/* Navigation */}
+   
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
           {sidebarLinks.map(
             ({ name, path, icon: Icon, badge }) => (
               <NavLink
                 key={name}
                 to={path}
+                onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
                   [
                     "group flex items-center justify-between rounded-md px-4 py-3 text-sm uppercase transition-colors",
