@@ -1,9 +1,30 @@
-import React from 'react'
+
+import { useEffect, useState } from 'react';
+import { getSupplier } from '../../service/supplierService';
 
 const Supplier = () => {
-  return (
-    <div>Supplier</div>
-  )
-}
+  const [supplier, setSupplier] = useState([]);
 
-export default Supplier
+  useEffect(() => {
+    getSupplier()
+      .then((data) => setSupplier(data))
+      .catch((error) => console.error(error));
+  }, []);
+
+      console.log(supplier);
+
+  return (
+    <div>
+      {supplier.map((data) => (
+        <div key={data.id}>
+          <h3>{data.name}</h3>
+          <p>${data.price}</p>
+        </div>
+      ))}
+    </div>
+
+
+  );
+};
+
+export default Supplier;
