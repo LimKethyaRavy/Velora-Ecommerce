@@ -19,7 +19,7 @@ export const createSupplier = async(supplier) => {
 
 export const updateSupplier = async(id, supplier) => {
 
-    const response = await axios.put(`${API_URL}/${id},supplier`, supplier);
+    const response = await axios.put(`${API_URL}/${id}`, supplier);
 
     return response.data;
 }
