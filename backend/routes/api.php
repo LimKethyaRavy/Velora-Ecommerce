@@ -27,7 +27,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('/suppliers/all', [SupplierController::class, 'index'])->name('suppliers.index');
 
-Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
+Route::post('/suppliers/create', [SupplierController::class, 'store'])->name('suppliers.store');
 
 Route::put('/suppliers/{id}', [SupplierController:: class, 'update'])->name('suppliers.update');
 
@@ -38,7 +38,7 @@ Route::delete('/suppliers/{id}', [SupplierController::class, 'destroy'])->name('
 
 Route::prefix('categories')->group(function () {
 
-    Route::get('/' , [CategoryController::class, 'index']);
+    Route::get('/all' , [CategoryController::class, 'index']);
     Route::post('/', [CategoryController::class, 'store']);
     Route::put('/{id}', [CategoryController::class, 'update']);
     Route::get('/{id}', [CategoryController::class, 'show']);
@@ -48,8 +48,8 @@ Route::prefix('categories')->group(function () {
 
 Route::prefix('product')->group(function () {
 
-    Route::get('/', [ProductController::class, 'index']);
-    Route::post('/', [ProductController::class, 'store']);
+    Route::get('/all', [ProductController::class, 'index']);
+    Route::post('/create', [ProductController::class, 'store']);
     Route::get('/{id}', [ProductController::class, 'show']);
     Route::put('/update/{id}', [ProductController::class, 'update']);
     Route::delete('/delete/{id}', [ProductController::class, 'destroy']);

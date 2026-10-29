@@ -10,10 +10,13 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    
+
     public function index()
     {
-        $categories = Category::with('children')->whereNull('parent_id')->get();
+        $categories = Category::with(['children'])
+            ->orderBy('parent_id')
+            ->orderBy('name')
+            ->get();
 
         return response()->json([
             'success' => true,
@@ -21,40 +24,37 @@ class CategoryController extends Controller
         ]);
     }
 
-  
+
     public function store(Request $request)
     {
         try {
 
-        $validate = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:categories,slug',
-            'gender' => ['required', Rule::in(['women', 'men', 'unisex'])],
-            'parent_id' => 'nullable|exists:categories,id'
-             
-        ]);
+            $validate = $request->validate([
+                'name' => 'required|string|max:255',
+                'slug' => 'required|string|max:255|unique:categories,slug',
+                'gender' => ['required', Rule::in(['women', 'men', 'unisex'])],
+                'parent_id' => 'nullable|exists:categories,id'
 
-        
-        $categories = Category::create($validate);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Category create successfully',
-            'data' => $categories
-            
-        ], 201);
+            ]);
 
 
-        }catch(Exception $e){
+            $categories = Category::create($validate);
 
-        return response()->json([
-            'message' => "Error $e"
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Category create successfully',
+                'data' => $categories
 
+            ], 201);
+        } catch (Exception $e) {
+
+            return response()->json([
+                'message' => "Error $e"
+            ]);
         }
     }
 
-  
+
     public function show(string $id)
     {
         $categories = Category::with('parent', 'children', 'products')->findOrFail($id);
@@ -65,14 +65,14 @@ class CategoryController extends Controller
         ]);
     }
 
-  
+
     public function update(Request $request, string $id)
     {
         $categories = Category::findOrFail($id);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:categories,slug',
+            'slug' => ['required', 'string', 'max:255', Rule::unique('categories', 'slug')->ignore($categories->id)],
             'gender' => ['required', Rule::in(['women', 'men', 'unisex'])],
             'parent_id' => 'nullable|exists:categories,id'
         ]);
@@ -84,17 +84,15 @@ class CategoryController extends Controller
             'message' => 'Category update successfully',
             'data' => $categories
         ]);
-
-
     }
 
-  
+
     public function destroy(string $id)
     {
         $categories = Category::findOrFail($id);
 
         // ==========if category have sub category cannot deleye=============
-        if($categories->children()->count() > 0){
+        if ($categories->children()->count() > 0) {
 
             return response()->json([
 
@@ -102,11 +100,10 @@ class CategoryController extends Controller
                 'message' => 'Cannot delete main category while sub-category still have'
 
             ], 422);
-
         }
 
         // =============if category have active prodcut cannot delete============ 
-        if($categories->products()->count() > 0){
+        if ($categories->products()->count() > 0) {
 
             return response()->json([
                 'success' => false,
@@ -120,7 +117,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category delete successfully',
-            
+
         ], 200);
     }
 }

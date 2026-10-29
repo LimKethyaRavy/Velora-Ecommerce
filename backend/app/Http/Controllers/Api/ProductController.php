@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Products;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
@@ -15,7 +16,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'suppliers']);
+        $query = Product::with(['category', 'suppliers', 'product_variants', 'product_image']);
 
         if ($request->filled('category_id')) {
 
@@ -51,10 +52,54 @@ class ProductController extends Controller
                 'slug' => 'required|string|max:155',
                 'description' => 'required|string|max:255',
                 'base_price' => 'required|numeric|min:0',
-                'is_active' => 'boolean'
+                'is_active' => 'boolean',
+
+                'product_variants' => 'nullable|array',
+                'product_variants.*.sku' => 'required|string|max:155',
+                'product_variants.*.size' => 'required|string|max:10',
+                'product_variants.*.color' => 'required|string|max:50',
+                'product_variants.*.price' => 'required|numeric|min:0',
+                'product_variants.*.stock_quantity' => 'required|integer|min:0',
+
+                'images' => 'nullable|array',
+                'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048'
             ]);
 
-            $prodcut = Product::create($validated);
+            $prodcut = DB::transaction(function() use($request, $validated){
+
+                $varinats = $validated['product_variants'] ?? [];
+                unset($validated['product_variants']);
+
+             $prodcut = Product::create($validated);
+
+             if(!empty($varinats)) {
+                $prodcut->variant()->createMany(
+                    $varinats
+                );
+             }
+
+             if($request->hasFile('images')) {
+                foreach($request->file('images') as $image) {
+
+                    $path = $image->store('products', 's3');
+
+                    $prodcut->image()->create([
+                        'image_url' => $path
+                    ]);
+                }
+             }
+
+             return $prodcut;
+        
+            });
+
+            $prodcut->load([
+                'category',
+                'supplier',
+                'variant',
+                'image'
+            ]);
+           
 
             return response()->json([
                 'success' => true,

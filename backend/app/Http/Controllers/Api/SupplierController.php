@@ -14,7 +14,7 @@ class SupplierController extends Controller
     public function index()
     {
         $suppliers = Suppliers::withCount(
-            'prodcuts'
+            'products'
         )->get();
 
         return response()->json([
