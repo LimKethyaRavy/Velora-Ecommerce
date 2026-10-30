@@ -36,13 +36,13 @@ class Product extends Model
         return $this->belongsTo(Suppliers::class, 'supplier_id');
     }
 
-    public function variant()
+    public function product_variant()
     {
 
         return $this->hasMany(Product_Variant::class, 'product_id');
     }
 
-    public function image()
+    public function product_image()
     {
 
         return $this->hasMany(Product_image::class, 'product_id');
