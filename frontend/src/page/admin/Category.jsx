@@ -60,7 +60,7 @@ const Category = () => {
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Fetch categories
+
   const loadCategory = useCallback(async () => {
     setLoading(true);
 
