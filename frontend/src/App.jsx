@@ -2,7 +2,7 @@ import './App.css'
 import AdminLayout from './layouts/AdminLayout'
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from './page/admin/Dashboard';
-import ProductFeature from './page/admin/ProductFeature';
+import ProductFeature from './page/admin/products/ProductFeature';
 import Supplier from './page/admin/Supplier';
 import Category from './page/admin/Category';
 import Order from './page/admin/Order';
