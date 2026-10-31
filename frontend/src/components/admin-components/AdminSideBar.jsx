@@ -22,7 +22,7 @@ const sidebarLinks = [
   },
   {
     name: "Products",
-    path: "/admin/productfeature",
+    path: "/admin/products",
     icon: Package,
     badge: { value: 148, tone: "gray" },
   },

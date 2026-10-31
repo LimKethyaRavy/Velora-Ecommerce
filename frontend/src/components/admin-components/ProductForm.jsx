@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import Swal from "sweetalert2";
-import { createProduct } from "../../service/productService";
+import { createProduct, updateProduct } from "../../service/productService";
 
 const inputClass =
   "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100";
@@ -26,16 +26,44 @@ const emptyForm = () => ({
   images: [],
 });
 
+const normalizeProduct = (product = {}) => ({
+  category_id: product.category_id ?? product.category?.id ?? "",
+  supplier_id: product.supplier_id ?? product.supplier?.id ?? "",
+  name: product.name ?? "",
+  slug: product.slug ?? "",
+  description: product.description ?? "",
+  base_price: product.base_price ?? "",
+  is_active: product.is_active ?? true,
+  product_variants:
+    Array.isArray(product.product_variants) && product.product_variants.length > 0
+      ? product.product_variants.map((variant) => ({
+          sku: variant.sku ?? "",
+          size: variant.size ?? "",
+          color: variant.color ?? "",
+          price: variant.price ?? "",
+          stock_quantity: variant.stock_quantity ?? "",
+        }))
+      : [emptyVariant()],
+  images: [],
+});
+
 export default function ProductForm({
   onClose,
   onSuccess,
   categories = [],
   suppliers = [],
+  initialValues = null,
+  mode = "create",
+  productId = null,
 }) {
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState(() => normalizeProduct(initialValues));
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [previews, setPreviews] = useState([]);
+
+  useEffect(() => {
+    setForm(normalizeProduct(initialValues));
+  }, [initialValues]);
 
   useEffect(() => {
     const urls = form.images.map((image) => URL.createObjectURL(image));
@@ -123,14 +151,18 @@ export default function ProductForm({
         formData.append(`images[${index}]`, image);
       });
 
-      const response = await createProduct(formData);
+      const response =
+        mode === "edit" && productId
+          ? await updateProduct(productId, formData)
+          : await createProduct(formData);
+
       if (response?.success === false) {
-        throw new Error(response.message || "Unable to create product");
+        throw new Error(response.message || `Unable to ${mode === "edit" ? "update" : "create"} product`);
       }
 
       await Swal.fire({
         icon: "success",
-        title: "Product created",
+        title: mode === "edit" ? "Product updated" : "Product created",
         timer: 1600,
         showConfirmButton: false,
       });
@@ -160,10 +192,12 @@ export default function ProductForm({
         <div className="flex items-center justify-between border-b bg-white px-6 py-5">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">
-              Add New Product
+              {mode === "edit" ? "Edit Product" : "Add New Product"}
             </h2>
             <p className="mt-1 text-sm text-gray-500">
-              Create a new item for your Velora collection.
+              {mode === "edit"
+                ? "Update this item in your Velora collection."
+                : "Create a new item for your Velora collection."}
             </p>
           </div>
           <button
