@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, Upload, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Plus, Trash2, X } from "lucide-react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { createProduct, updateProduct } from "../../service/productService";
 
-const inputClass =
-  "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-100";
+/* ---------- Design tokens ----------
+   ink      #1f1b2d   text
+   muted    #6b6880   secondary text
+   line     #e4e1ec   borders
+   canvas   #f4f3f8   page background
+   accent   #5b2d8e   primary action / focus
+------------------------------------ */
+
+const fieldClass =
+  "mt-1.5 w-full rounded-md border border-[#e4e1ec] bg-white px-3 py-2.5 text-sm text-[#1f1b2d] " +
+  "placeholder:text-[#a9a6b8] outline-none transition " +
+  "focus:border-[#5b2d8e] focus:ring-2 focus:ring-[#5b2d8e]/15";
+
+const labelClass = "block text-sm font-medium text-[#1f1b2d]";
 
 const emptyVariant = () => ({
   sku: "",
@@ -13,18 +25,6 @@ const emptyVariant = () => ({
   color: "",
   price: "",
   stock_quantity: "",
-});
-
-const emptyForm = () => ({
-  category_id: "",
-  supplier_id: "",
-  name: "",
-  slug: "",
-  description: "",
-  base_price: "",
-  is_active: true,
-  product_variants: [emptyVariant()],
-  images: [],
 });
 
 const normalizeProduct = (product = {}) => {
@@ -52,6 +52,38 @@ const normalizeProduct = (product = {}) => {
     images: [],
   };
 };
+
+const VARIANT_FIELDS = [
+  { key: "sku", label: "SKU", type: "text" },
+  { key: "size", label: "Size", type: "text" },
+  { key: "color", label: "Color", type: "text" },
+  { key: "price", label: "Price", type: "number" },
+  { key: "stock_quantity", label: "In stock", type: "number" },
+];
+
+// Variant row: 5 fields + remove button. Shared by the header row and each row.
+const VARIANT_GRID =
+  "grid grid-cols-2 gap-3 md:grid-cols-[1.3fr_0.8fr_1fr_0.9fr_0.9fr_36px] md:items-start";
+
+function FieldError({ message }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs text-red-600">{message}</p>;
+}
+
+function Section({ title, hint, action, children }) {
+  return (
+    <section className="px-6 py-6">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-base font-semibold text-[#1f1b2d]">{title}</h3>
+          {hint && <p className="mt-0.5 text-sm text-[#6b6880]">{hint}</p>}
+        </div>
+        {action}
+      </div>
+      <div className="space-y-5">{children}</div>
+    </section>
+  );
+}
 
 export default function ProductForm({
   onClose,
@@ -165,7 +197,10 @@ export default function ProductForm({
           : await createProduct(formData);
 
       if (response?.success === false) {
-        throw new Error(response.message || `Unable to ${mode === "edit" ? "update" : "create"} product`);
+        throw new Error(
+          response.message ||
+            `Unable to ${mode === "edit" ? "update" : "create"} product`,
+        );
       }
 
       await Swal.fire({
@@ -194,279 +229,357 @@ export default function ProductForm({
     }
   };
 
+  const isEdit = mode === "edit";
+  const submitLabel = saving
+    ? "Saving…"
+    : isEdit
+      ? "Save changes"
+      : "Create product";
+
+  const actionButtons = (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        onClick={goBack}
+        disabled={saving}
+        className="rounded-md border border-[#e4e1ec] bg-white px-4 py-2.5 text-sm font-medium text-[#1f1b2d] transition hover:bg-[#f4f3f8] disabled:opacity-50"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        form="product-form"
+        disabled={saving}
+        className="rounded-md bg-[#5b2d8e] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#4a2374] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b2d8e] focus-visible:ring-offset-2 disabled:opacity-50"
+      >
+        {submitLabel}
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-full w-full bg-[#f8f9fc] px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-7xl space-y-6">
-        <div className="flex items-center justify-between gap-4">
+    <div className="min-h-full w-full bg-[#f4f3f8] px-4 py-6 text-[#1f1b2d] sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1400px]">
+        {/* Header */}
+        <button
+          type="button"
+          onClick={goBack}
+          className="inline-flex items-center gap-1.5 text-sm text-[#6b6880] transition hover:text-[#5b2d8e]"
+        >
+          <ArrowLeft size={16} /> Products
+        </button>
+
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-900">
-              {mode === "edit" ? "Edit Product" : "Add New Product"}
+            <h2 className="text-3xl font-semibold tracking-tight">
+              {isEdit ? "Edit product" : "New product"}
             </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              {mode === "edit"
-                ? "Update this item in your Velora collection."
-                : "Create a new item for your Velora collection."}
+            <p className="mt-1.5 text-sm text-[#6b6880]">
+              {isEdit
+                ? "Changes appear in your Velora collection as soon as you save."
+                : "Add the details, sizes and photos shoppers will see in your Velora collection."}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={goBack}
-            className="rounded-lg p-2 hover:bg-gray-100"
-            aria-label="Back to products"
-          >
-            <X size={22} />
-          </button>
+          {actionButtons}
         </div>
 
         <form
           id="product-form"
           onSubmit={handleSubmit}
-          className="space-y-6"
+          className="mt-6 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]"
         >
-          <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold">Basic Information</h3>
-            <label className="block text-sm font-medium">
-              Product name
-              <input
-                name="name"
-                value={form.name}
-                onChange={handleNameChange}
-                className={inputClass}
-                required
-              />
-              {errors.name && (
-                <span className="text-xs text-red-500">{errors.name[0]}</span>
-              )}
-            </label>
-            <label className="block text-sm font-medium">
-              Slug
-              <input
-                name="slug"
-                value={form.slug}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-              {errors.slug && (
-                <span className="text-xs text-red-500">{errors.slug[0]}</span>
-              )}
-            </label>
-            <label className="block text-sm font-medium">
-              Description
-              <textarea
-                name="description"
-                value={form.description}
-                onChange={handleChange}
-                className={inputClass}
-                rows={3}
-                required
-              />
-              {errors.description && (
-                <span className="text-xs text-red-500">
-                  {errors.description[0]}
+          {/* ---------- Main column ---------- */}
+          <div className="divide-y divide-[#e4e1ec] rounded-lg border border-[#e4e1ec] bg-white">
+            <Section title="Details" hint="What shoppers read on the product page.">
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className={labelClass}>
+                  Product name
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleNameChange}
+                    className={fieldClass}
+                    placeholder="Linen wrap dress"
+                    required
+                  />
+                  <FieldError message={errors.name?.[0]} />
+                </label>
+
+                <label className={labelClass}>
+                  Page address
+                  <div className="mt-1.5 flex items-stretch overflow-hidden rounded-md border border-[#e4e1ec] bg-white focus-within:border-[#5b2d8e] focus-within:ring-2 focus-within:ring-[#5b2d8e]/15">
+                    <span className="flex items-center bg-[#f4f3f8] px-3 text-sm text-[#6b6880]">
+                      /products/
+                    </span>
+                    <input
+                      name="slug"
+                      value={form.slug}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2.5 text-sm outline-none"
+                      required
+                    />
+                  </div>
+                  <FieldError message={errors.slug?.[0]} />
+                </label>
+              </div>
+
+              <label className={labelClass}>
+                Description
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  className={fieldClass}
+                  rows={5}
+                  placeholder="Fabric, fit, and how to care for it"
+                  required
+                />
+                <FieldError message={errors.description?.[0]} />
+              </label>
+            </Section>
+
+            <Section
+              title="Variants"
+              hint="One row for each size and color you sell."
+              action={
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm((current) => ({
+                      ...current,
+                      product_variants: [
+                        ...current.product_variants,
+                        emptyVariant(),
+                      ],
+                    }))
+                  }
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-[#e4e1ec] px-3 py-2 text-sm font-medium text-[#5b2d8e] transition hover:border-[#5b2d8e] hover:bg-[#5b2d8e]/5"
+                >
+                  <Plus size={16} /> Add variant
+                </button>
+              }
+            >
+              {/* Column headings (desktop only) */}
+              <div
+                className={`${VARIANT_GRID} hidden text-xs font-medium text-[#6b6880] md:grid`}
+                aria-hidden="true"
+              >
+                {VARIANT_FIELDS.map(({ key, label }) => (
+                  <span key={key}>{label}</span>
+                ))}
+                <span />
+              </div>
+
+              <div className="space-y-4 md:space-y-3">
+                {form.product_variants.map((variant, index) => (
+                  <div
+                    key={index}
+                    className="rounded-md border border-[#e4e1ec] bg-[#fafafc] p-3 md:border-0 md:bg-transparent md:p-0"
+                  >
+                    <div className="mb-2 flex items-center justify-between md:hidden">
+                      <span className="text-sm font-medium">
+                        Variant {index + 1}
+                      </span>
+                    </div>
+
+                    <div className={VARIANT_GRID}>
+                      {VARIANT_FIELDS.map(({ key, label, type }) => (
+                        <label
+                          key={key}
+                          className="text-xs font-medium text-[#6b6880]"
+                        >
+                          <span className="md:sr-only">{label}</span>
+                          <input
+                            type={type}
+                            min={type === "number" ? "0" : undefined}
+                            step={key === "price" ? "0.01" : undefined}
+                            value={variant[key]}
+                            onChange={(event) =>
+                              handleVariantChange(index, key, event.target.value)
+                            }
+                            className={`${fieldClass} md:mt-0`}
+                            required
+                          />
+                          <FieldError
+                            message={
+                              errors[`product_variants.${index}.${key}`]?.[0]
+                            }
+                          />
+                        </label>
+                      ))}
+
+                      <button
+                        type="button"
+                        disabled={form.product_variants.length === 1}
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            product_variants: current.product_variants.filter(
+                              (_, variantIndex) => variantIndex !== index,
+                            ),
+                          }))
+                        }
+                        className="col-span-2 flex h-[42px] items-center justify-center gap-1.5 rounded-md text-sm text-[#6b6880] transition hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#6b6880] md:col-span-1 md:mt-0 md:w-9"
+                        aria-label={`Remove variant ${index + 1}`}
+                      >
+                        <Trash2 size={16} />
+                        <span className="md:hidden">Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </div>
+
+          {/* ---------- Side column ---------- */}
+          <aside className="divide-y divide-[#e4e1ec] rounded-lg border border-[#e4e1ec] bg-white xl:sticky xl:top-6">
+            <Section title="Visibility">
+              <label className="flex cursor-pointer items-center justify-between gap-4">
+                <span>
+                  <span className="block text-sm font-medium">
+                    {form.is_active ? "Visible in the shop" : "Hidden from the shop"}
+                  </span>
+                  <span className="block text-sm text-[#6b6880]">
+                    {form.is_active
+                      ? "Shoppers can find and buy this."
+                      : "Only admins can see this."}
+                  </span>
                 </span>
-              )}
-            </label>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium">
+                <span className="relative inline-flex shrink-0">
+                  <input
+                    type="checkbox"
+                    name="is_active"
+                    checked={form.is_active}
+                    onChange={handleChange}
+                    className="peer sr-only"
+                  />
+                  <span className="h-6 w-11 rounded-full bg-[#d4d0e0] transition peer-checked:bg-[#5b2d8e] peer-focus-visible:ring-2 peer-focus-visible:ring-[#5b2d8e]/40 peer-focus-visible:ring-offset-2" />
+                  <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5" />
+                </span>
+              </label>
+            </Section>
+
+            <Section title="Organization">
+              <label className={labelClass}>
                 Category
                 <select
                   name="category_id"
                   value={form.category_id}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={fieldClass}
                   required
                 >
-                  <option value="">Select category</option>
+                  <option value="">Select a category</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
+                <FieldError message={errors.category_id?.[0]} />
               </label>
-              <label className="block text-sm font-medium">
+
+              <label className={labelClass}>
                 Supplier
                 <select
                   name="supplier_id"
                   value={form.supplier_id}
                   onChange={handleChange}
-                  className={inputClass}
+                  className={fieldClass}
                   required
                 >
-                  <option value="">Select supplier</option>
+                  <option value="">Select a supplier</option>
                   {suppliers.map((supplier) => (
                     <option key={supplier.id} value={supplier.id}>
                       {supplier.name}
                     </option>
                   ))}
                 </select>
+                <FieldError message={errors.supplier_id?.[0]} />
               </label>
-            </div>
-            <label className="block text-sm font-medium">
-              Base price
-              <input
-                type="number"
-                name="base_price"
-                min="0"
-                step="0.01"
-                value={form.base_price}
-                onChange={handleChange}
-                className={inputClass}
-                required
-              />
-            </label>
-          </section>
 
-          <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Product variants</h3>
-              <button
-                type="button"
-                onClick={() =>
-                  setForm((current) => ({
-                    ...current,
-                    product_variants: [
-                      ...current.product_variants,
-                      emptyVariant(),
-                    ],
-                  }))
-                }
-                className="flex items-center gap-2 text-sm font-medium text-violet-600"
-              >
-                <Plus size={16} /> Add variant
-              </button>
-            </div>
-            {form.product_variants.map((variant, index) => (
-              <div key={index} className="rounded-xl border p-4">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    Variant {index + 1}
+              <label className={labelClass}>
+                Base price
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 mt-[3px] -translate-y-1/2 text-sm text-[#6b6880]">
+                    $
                   </span>
-                  <button
-                    type="button"
-                    disabled={form.product_variants.length === 1}
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        product_variants: current.product_variants.filter(
-                          (_, variantIndex) => variantIndex !== index,
-                        ),
-                      }))
-                    }
-                    className="text-red-500 disabled:opacity-40"
-                    aria-label={`Remove variant ${index + 1}`}
-                  >
-                    <Trash2 size={17} />
-                  </button>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {[
-                    ["sku", "SKU", "text"],
-                    ["size", "Size", "text"],
-                    ["color", "Color", "text"],
-                    ["price", "Price", "number"],
-                    ["stock_quantity", "Stock", "number"],
-                  ].map(([field, label, type]) => (
-                    <label key={field} className="text-xs text-gray-500">
-                      {label}
-                      <input
-                        type={type}
-                        min={type === "number" ? "0" : undefined}
-                        step={field === "price" ? "0.01" : undefined}
-                        value={variant[field]}
-                        onChange={(event) =>
-                          handleVariantChange(index, field, event.target.value)
-                        }
-                        className={inputClass}
-                        required
-                      />
-                      {errors[`product_variants.${index}.${field}`] && (
-                        <span className="text-red-500">
-                          {errors[`product_variants.${index}.${field}`][0]}
-                        </span>
-                      )}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold">Product images</h3>
-            <label className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-violet-200 bg-violet-50 p-8 text-center">
-              <Upload className="mb-3 text-violet-600" size={28} />
-              <span className="text-sm font-medium">Choose images</span>
-              <span className="mt-1 text-xs text-gray-500">
-                JPG, PNG, or WEBP, up to 2MB each
-              </span>
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                onChange={handleImagesChange}
-                className="hidden"
-              />
-            </label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {previews.map((preview, index) => (
-                <div key={preview} className="relative">
-                  <img
-                    src={preview}
-                    alt={`Product image ${index + 1}`}
-                    className="h-28 w-full rounded-xl object-cover"
+                  <input
+                    type="number"
+                    name="base_price"
+                    min="0"
+                    step="0.01"
+                    value={form.base_price}
+                    onChange={handleChange}
+                    className={`${fieldClass} pl-7`}
+                    placeholder="0.00"
+                    required
                   />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        images: current.images.filter(
-                          (_, imageIndex) => imageIndex !== index,
-                        ),
-                      }))
-                    }
-                    className="absolute right-1 top-1 rounded-full bg-white p-1 shadow"
-                    aria-label={`Remove image ${index + 1}`}
-                  >
-                    <X size={14} />
-                  </button>
                 </div>
-              ))}
-            </div>
-          </section>
+                <FieldError message={errors.base_price?.[0]} />
+              </label>
+            </Section>
 
-          <label className="flex items-center justify-between rounded-xl bg-white p-4">
-            <span className="text-sm text-gray-700">Active product</span>
-            <input
-              type="checkbox"
-              name="is_active"
-              checked={form.is_active}
-              onChange={handleChange}
-              className="h-5 w-5 accent-violet-600"
-            />
-          </label>
+            <Section
+              title="Photos"
+              hint="First photo is the cover. JPG, PNG or WEBP, up to 2MB each."
+            >
+              <div className="grid grid-cols-3 gap-3">
+                {previews.map((preview, index) => (
+                  <div
+                    key={preview}
+                    className="relative aspect-[3/4] overflow-hidden rounded-md border border-[#e4e1ec] bg-[#f4f3f8]"
+                  >
+                    <img
+                      src={preview}
+                      alt={`Product photo ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    {index === 0 && (
+                      <span className="absolute bottom-1.5 left-1.5 rounded bg-[#1f1b2d]/80 px-1.5 py-0.5 text-[11px] font-medium text-white">
+                        Cover
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          images: current.images.filter(
+                            (_, imageIndex) => imageIndex !== index,
+                          ),
+                        }))
+                      }
+                      className="absolute right-1 top-1 rounded-full bg-white p-1 shadow transition hover:bg-red-50 hover:text-red-600"
+                      aria-label={`Remove photo ${index + 1}`}
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+
+                <label className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-[#c9c3da] text-center text-xs text-[#6b6880] transition focus-within:border-[#5b2d8e] hover:border-[#5b2d8e] hover:bg-[#5b2d8e]/5 hover:text-[#5b2d8e]">
+                  <ImagePlus size={22} />
+                  <span className="px-1">
+                    {previews.length === 0 ? "Add photos" : "Add more"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handleImagesChange}
+                    className="sr-only"
+                  />
+                </label>
+              </div>
+              <FieldError message={errors.images?.[0]} />
+            </Section>
+          </aside>
         </form>
 
-        <div className="flex flex-wrap justify-end gap-3 rounded-2xl border border-gray-100 bg-white px-6 py-4 shadow-sm">
-          <button
-            type="button"
-            onClick={goBack}
-            disabled={saving}
-            className="rounded-xl border px-5 py-3 text-sm font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="product-form"
-            disabled={saving}
-            className="rounded-xl bg-violet-600 px-6 py-3 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Product"}
-          </button>
-        </div>
+        {/* Bottom actions: part of the page, not fixed over the sidebar */}
+        <div className="mt-6 flex justify-end">{actionButtons}</div>
       </div>
     </div>
   );
