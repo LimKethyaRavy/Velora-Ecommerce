@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 import { createProduct, updateProduct } from "../../service/productService";
 
 const inputClass =
@@ -26,26 +27,31 @@ const emptyForm = () => ({
   images: [],
 });
 
-const normalizeProduct = (product = {}) => ({
-  category_id: product.category_id ?? product.category?.id ?? "",
-  supplier_id: product.supplier_id ?? product.supplier?.id ?? "",
-  name: product.name ?? "",
-  slug: product.slug ?? "",
-  description: product.description ?? "",
-  base_price: product.base_price ?? "",
-  is_active: product.is_active ?? true,
-  product_variants:
-    Array.isArray(product.product_variants) && product.product_variants.length > 0
-      ? product.product_variants.map((variant) => ({
-          sku: variant.sku ?? "",
-          size: variant.size ?? "",
-          color: variant.color ?? "",
-          price: variant.price ?? "",
-          stock_quantity: variant.stock_quantity ?? "",
-        }))
-      : [emptyVariant()],
-  images: [],
-});
+const normalizeProduct = (product = {}) => {
+  const source = product ?? {};
+
+  return {
+    category_id: source.category_id ?? source.category?.id ?? "",
+    supplier_id: source.supplier_id ?? source.supplier?.id ?? "",
+    name: source.name ?? "",
+    slug: source.slug ?? "",
+    description: source.description ?? "",
+    base_price: source.base_price ?? "",
+    is_active: source.is_active ?? true,
+    product_variants:
+      Array.isArray(source.product_variants) &&
+      source.product_variants.length > 0
+        ? source.product_variants.map((variant) => ({
+            sku: variant.sku ?? "",
+            size: variant.size ?? "",
+            color: variant.color ?? "",
+            price: variant.price ?? "",
+            stock_quantity: variant.stock_quantity ?? "",
+          }))
+        : [emptyVariant()],
+    images: [],
+  };
+};
 
 export default function ProductForm({
   onClose,
@@ -56,6 +62,8 @@ export default function ProductForm({
   mode = "create",
   productId = null,
 }) {
+  const navigate = useNavigate();
+  const goBack = () => navigate("/admin/products");
   const [form, setForm] = useState(() => normalizeProduct(initialValues));
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -167,7 +175,7 @@ export default function ProductForm({
         showConfirmButton: false,
       });
       await onSuccess?.();
-      onClose?.();
+      navigate("/admin/products");
     } catch (error) {
       if (error.response?.status === 422) {
         setErrors(error.response.data.errors ?? {});
@@ -187,9 +195,9 @@ export default function ProductForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
-      <div className="flex h-full w-full max-w-5xl flex-col bg-gray-50 shadow-2xl">
-        <div className="flex items-center justify-between border-b bg-white px-6 py-5">
+    <div className="min-h-full w-full bg-[#f8f9fc] px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl space-y-6">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">
               {mode === "edit" ? "Edit Product" : "Add New Product"}
@@ -202,9 +210,9 @@ export default function ProductForm({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={goBack}
             className="rounded-lg p-2 hover:bg-gray-100"
-            aria-label="Close product form"
+            aria-label="Back to products"
           >
             <X size={22} />
           </button>
@@ -213,7 +221,7 @@ export default function ProductForm({
         <form
           id="product-form"
           onSubmit={handleSubmit}
-          className="flex-1 space-y-6 overflow-y-auto p-6"
+          className="space-y-6"
         >
           <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold">Basic Information</h3>
@@ -441,10 +449,10 @@ export default function ProductForm({
           </label>
         </form>
 
-        <div className="flex justify-end gap-3 border-t bg-white px-6 py-4">
+        <div className="flex flex-wrap justify-end gap-3 rounded-2xl border border-gray-100 bg-white px-6 py-4 shadow-sm">
           <button
             type="button"
-            onClick={onClose}
+            onClick={goBack}
             disabled={saving}
             className="rounded-xl border px-5 py-3 text-sm font-medium"
           >
