@@ -11,17 +11,28 @@ use Illuminate\Validation\Rule;
 class CategoryController extends Controller
 {
 
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::with(['children'])
-            ->orderBy('parent_id')
-            ->orderBy('name')
-            ->get();
+
+        $query = Category::with(['children', 'parent', 'products']);
+        
+        if($request->filled('gender')) {
+            $query->where('gender', $request->gender);
+        }
+
+        if($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $categories = $query->paginate(10);
+
+            
 
         return response()->json([
             'success' => true,
             'data' => $categories
         ]);
+
     }
 
 
@@ -91,7 +102,6 @@ class CategoryController extends Controller
     {
         $categories = Category::findOrFail($id);
 
-        // ==========if category have sub category cannot deleye=============
         if ($categories->children()->count() > 0) {
 
             return response()->json([
@@ -102,7 +112,6 @@ class CategoryController extends Controller
             ], 422);
         }
 
-        // =============if category have active prodcut cannot delete============ 
         if ($categories->products()->count() > 0) {
 
             return response()->json([
@@ -111,7 +120,6 @@ class CategoryController extends Controller
             ], 422);
         }
 
-        // =============if category did not have sub and did not have prodcut active can be delete======
         $categories->delete();
 
         return response()->json([

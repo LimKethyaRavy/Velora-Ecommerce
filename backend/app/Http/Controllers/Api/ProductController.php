@@ -100,8 +100,8 @@ class ProductController extends Controller
             $prodcut->load([
                 'category',
                 'supplier',
-                'variant',
-                'image'
+                'product_variant',
+                'product_image'
             ]);
 
 
