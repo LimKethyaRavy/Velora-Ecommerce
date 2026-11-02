@@ -95,6 +95,8 @@ function Section({ title, hint, action, children }) {
   );
 }
 
+
+
 export default function ProductForm({
   onClose,
   onSuccess,
@@ -270,7 +272,7 @@ export default function ProductForm({
   return (
     <div className="min-h-full w-full bg-[#f4f3f8] px-4 py-6 text-[#1f1b2d] sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1400px]">
-        {/* Header */}
+  
         <button
           type="button"
           onClick={goBack}
@@ -289,6 +291,7 @@ export default function ProductForm({
                 ? "Changes appear in your Velora collection as soon as you save."
                 : "Add the details, sizes and photos shoppers will see in your Velora collection."}
             </p>
+
           </div>
           {actionButtons}
         </div>
