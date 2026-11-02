@@ -123,7 +123,7 @@ class ProductController extends Controller
 
     public function show(string $id)
     {
-        $prodcut = Product::with(['Category', 'suppliers', 'product_variant', 'product_image'])->findOrFail($id);
+        $prodcut = Product::with(['Category', 'supplier', 'product_variant', 'product_image'])->findOrFail($id);
 
         return response()->json([
             'success' => true,
