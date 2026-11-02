@@ -29,6 +29,8 @@ const emptyVariant = () => ({
 
 const normalizeProduct = (product = {}) => {
   const source = product ?? {};
+  const productVariants =
+    source.product_variants ?? source.product_variant ?? source.variants ?? [];
 
   return {
     category_id: source.category_id ?? source.category?.id ?? "",
@@ -38,10 +40,13 @@ const normalizeProduct = (product = {}) => {
     description: source.description ?? "",
     base_price: source.base_price ?? "",
     is_active: source.is_active ?? true,
+
+   
     product_variants:
-      Array.isArray(source.product_variants) &&
-      source.product_variants.length > 0
-        ? source.product_variants.map((variant) => ({
+      Array.isArray(productVariants) &&
+      productVariants.length > 0
+        ? productVariants.map((variant) => ({
+            ...(variant.id != null ? { id: variant.id } : {}),
             sku: variant.sku ?? "",
             size: variant.size ?? "",
             color: variant.color ?? "",
@@ -51,6 +56,10 @@ const normalizeProduct = (product = {}) => {
         : [emptyVariant()],
     images: [],
   };
+
+   
+
+
 };
 
 const VARIANT_FIELDS = [
@@ -61,7 +70,7 @@ const VARIANT_FIELDS = [
   { key: "stock_quantity", label: "In stock", type: "number" },
 ];
 
-// Variant row: 5 fields + remove button. Shared by the header row and each row.
+
 const VARIANT_GRID =
   "grid grid-cols-2 gap-3 md:grid-cols-[1.3fr_0.8fr_1fr_0.9fr_0.9fr_36px] md:items-start";
 
@@ -79,6 +88,7 @@ function Section({ title, hint, action, children }) {
           {hint && <p className="mt-0.5 text-sm text-[#6b6880]">{hint}</p>}
         </div>
         {action}
+       
       </div>
       <div className="space-y-5">{children}</div>
     </section>

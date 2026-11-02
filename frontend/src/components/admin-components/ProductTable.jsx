@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pencil, Trash2, PackageOpen } from "lucide-react";
 
 const money = (value) =>
@@ -21,6 +21,11 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
         <p className="text-sm">Try another search or filter.</p>
       </div>
     );
+
+    // if(onEdit == 'click') {
+      
+    //   return response.data
+    // }
 
   return (
     <div className="overflow-x-auto">
@@ -109,6 +114,9 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
                       className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-violet-50 hover:text-violet-700"
                     >
                       <Pencil size={16} />
+
+                   
+                      
                     </button>
                     <button
                       onClick={() => onDelete(product)}
