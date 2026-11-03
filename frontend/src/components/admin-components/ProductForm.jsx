@@ -41,10 +41,8 @@ const normalizeProduct = (product = {}) => {
     base_price: source.base_price ?? "",
     is_active: source.is_active ?? true,
 
-   
     product_variants:
-      Array.isArray(productVariants) &&
-      productVariants.length > 0
+      Array.isArray(productVariants) && productVariants.length > 0
         ? productVariants.map((variant) => ({
             ...(variant.id != null ? { id: variant.id } : {}),
             sku: variant.sku ?? "",
@@ -56,10 +54,6 @@ const normalizeProduct = (product = {}) => {
         : [emptyVariant()],
     images: [],
   };
-
-   
-
-
 };
 
 const VARIANT_FIELDS = [
@@ -69,7 +63,6 @@ const VARIANT_FIELDS = [
   { key: "price", label: "Price", type: "number" },
   { key: "stock_quantity", label: "In stock", type: "number" },
 ];
-
 
 const VARIANT_GRID =
   "grid grid-cols-2 gap-3 md:grid-cols-[1.3fr_0.8fr_1fr_0.9fr_0.9fr_36px] md:items-start";
@@ -88,14 +81,11 @@ function Section({ title, hint, action, children }) {
           {hint && <p className="mt-0.5 text-sm text-[#6b6880]">{hint}</p>}
         </div>
         {action}
-       
       </div>
       <div className="space-y-5">{children}</div>
     </section>
   );
 }
-
-
 
 export default function ProductForm({
   onClose,
@@ -113,8 +103,25 @@ export default function ProductForm({
   const [errors, setErrors] = useState({});
   const [previews, setPreviews] = useState([]);
 
+  const [existingImages, setExistingImages] = useState(
+    initialValues?.product_image ?? [],
+  );
+  const [removedImageIds, setRemovedImageIds] = useState([]);
+  const [primaryImageId, setPrimaryImageId] = useState(
+    initialValues?.primary_image?.id ??
+      initialValues?.product_image?.find((image) => image.is_primary)?.id ??
+      null,
+  );
+
   useEffect(() => {
     setForm(normalizeProduct(initialValues));
+    setExistingImages(initialValues?.product_image || []);
+    setRemovedImageIds([]);
+    setPrimaryImageId(
+      initialValues?.primary_image?.id ??
+        initialValues?.product_image?.find((image) => image.is_primary)?.id ??
+        null,
+    );
   }, [initialValues]);
 
   useEffect(() => {
@@ -202,6 +209,12 @@ export default function ProductForm({
       form.images.forEach((image, index) => {
         formData.append(`images[${index}]`, image);
       });
+      removedImageIds.forEach((imageId, index) => {
+        formData.append(`removed_image_ids[${index}]`, imageId);
+      });
+      if (primaryImageId != null) {
+        formData.append("primary_image_id", primaryImageId);
+      }
 
       const response =
         mode === "edit" && productId
@@ -232,9 +245,7 @@ export default function ProductForm({
         icon: "error",
         title: "Unable to save product",
         text:
-          error.response?.data?.message ??
-          error.message ??
-          "Please try again.",
+          error.response?.data?.message ?? error.message ?? "Please try again.",
       });
     } finally {
       setSaving(false);
@@ -272,7 +283,6 @@ export default function ProductForm({
   return (
     <div className="min-h-full w-full bg-[#f4f3f8] px-4 py-6 text-[#1f1b2d] sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1400px]">
-  
         <button
           type="button"
           onClick={goBack}
@@ -291,7 +301,6 @@ export default function ProductForm({
                 ? "Changes appear in your Velora collection as soon as you save."
                 : "Add the details, sizes and photos shoppers will see in your Velora collection."}
             </p>
-
           </div>
           {actionButtons}
         </div>
@@ -303,7 +312,10 @@ export default function ProductForm({
         >
           {/* ---------- Main column ---------- */}
           <div className="divide-y divide-[#e4e1ec] rounded-lg border border-[#e4e1ec] bg-white">
-            <Section title="Details" hint="What shoppers read on the product page.">
+            <Section
+              title="Details"
+              hint="What shoppers read on the product page."
+            >
               <div className="grid gap-5 md:grid-cols-2">
                 <label className={labelClass}>
                   Product name
@@ -408,7 +420,11 @@ export default function ProductForm({
                             step={key === "price" ? "0.01" : undefined}
                             value={variant[key]}
                             onChange={(event) =>
-                              handleVariantChange(index, key, event.target.value)
+                              handleVariantChange(
+                                index,
+                                key,
+                                event.target.value,
+                              )
                             }
                             className={`${fieldClass} md:mt-0`}
                             required
@@ -451,7 +467,9 @@ export default function ProductForm({
               <label className="flex cursor-pointer items-center justify-between gap-4">
                 <span>
                   <span className="block text-sm font-medium">
-                    {form.is_active ? "Visible in the shop" : "Hidden from the shop"}
+                    {form.is_active
+                      ? "Visible in the shop"
+                      : "Hidden from the shop"}
                   </span>
                   <span className="block text-sm text-[#6b6880]">
                     {form.is_active
@@ -539,6 +557,53 @@ export default function ProductForm({
               hint="First photo is the cover. JPG, PNG or WEBP, up to 2MB each."
             >
               <div className="grid grid-cols-3 gap-3">
+                {existingImages.map((image) => (
+                  <div
+                    key={image.id}
+                    className="relative aspect-[3/4] overflow-hidden rounded-md border border-[#e4e1ec] bg-[#f4f3f8]"
+                  >
+                    <img
+                      src={image.image_url}
+                      alt="Product photo"
+                      className="h-full w-full object-cover"
+                    />
+                    <span className="absolute bottom-1.5 left-1.5 rounded bg-[#1f1b2d]/80 px-1.5 py-0.5 text-[11px] font-medium text-white">
+                      {Number(primaryImageId) === Number(image.id)
+                        ? "Cover"
+                        : "Saved"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setPrimaryImageId(image.id)}
+                      className="absolute left-1.5 top-1.5 rounded bg-white/95 px-2 py-1 text-[11px] font-medium text-[#1f1b2d] shadow hover:text-[#5b2d8e]"
+                      aria-pressed={Number(primaryImageId) === Number(image.id)}
+                    >
+                      Make cover
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExistingImages((current) =>
+                          current.filter((savedImage) => savedImage.id !== image.id),
+                        );
+                        setRemovedImageIds((current) =>
+                          current.includes(image.id) ? current : [...current, image.id],
+                        );
+                        if (Number(primaryImageId) === Number(image.id)) {
+                          const nextImage = existingImages.find(
+                            (savedImage) => savedImage.id !== image.id,
+                          );
+                          setPrimaryImageId(nextImage?.id ?? null);
+                        }
+                      }}
+                      className="absolute right-1.5 top-1.5 rounded-full bg-white p-1 text-[#1f1b2d] shadow transition hover:bg-red-50 hover:text-red-600"
+                      aria-label="Remove saved photo"
+                    >
+                      <X size={13} />
+                    </button>
+                  </div>
+                ))}
+
                 {previews.map((preview, index) => (
                   <div
                     key={preview}
@@ -549,7 +614,7 @@ export default function ProductForm({
                       alt={`Product photo ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
-                    {index === 0 && (
+                    {index === 0 && existingImages.length === 0 && !primaryImageId && (
                       <span className="absolute bottom-1.5 left-1.5 rounded bg-[#1f1b2d]/80 px-1.5 py-0.5 text-[11px] font-medium text-white">
                         Cover
                       </span>

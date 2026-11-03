@@ -4,21 +4,34 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product_image extends Model
 {
     use HasFactory;
 
+    // protected $appends = [
+    //     'public_url',
+    // ];
+
     protected $fillable = [
         'product_id',
         'variant_id',
         'image_url',
+        'cloudinary_id',
         'is_primary'
     ];
 
     protected $casts = [
         'is_primary' => 'boolean'
     ];
+
+    // public function getPublicUrlAttribute(): ?string
+    // {
+    //     return $this->image_url
+    //         ? Storage::disk('supabase')->url($this->image_url)
+    //         : null;
+    // }
 
     public function product(){
 

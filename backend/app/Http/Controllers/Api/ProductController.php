@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Cloudinary\Cloudinary;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -45,79 +47,116 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+
+        $validated = $request->validate([
+            'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'required|exists:suppliers,id',
+            'name' => 'required|string|max:255',
+            'slug' => 'required|string|max:155',
+            'description' => 'required|string|max:655',
+            'base_price' => 'required|numeric|min:0',
+            'is_active' => 'boolean',
+
+            'product_variants' => 'nullable|array',
+            'product_variants.*.sku' => 'required|string|max:155',
+            'product_variants.*.size' => 'required|string|max:10',
+            'product_variants.*.color' => 'required|string|max:50',
+            'product_variants.*.price' => 'required|numeric|min:0',
+            'product_variants.*.stock_quantity' => 'required|integer|min:0',
+
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048'
+        ]);
+
+        $uploadedPaths = [];
+
         try {
-            $validated = $request->validate([
-                'category_id' => 'required|exists:categories,id',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'name' => 'required|string|max:255',
-                'slug' => 'required|string|max:155',
-                'description' => 'required|string|max:655',
-                'base_price' => 'required|numeric|min:0',
-                'is_active' => 'boolean',
 
-                'product_variants' => 'nullable|array',
-                'product_variants.*.sku' => 'required|string|max:155',
-                'product_variants.*.size' => 'required|string|max:10',
-                'product_variants.*.color' => 'required|string|max:50',
-                'product_variants.*.price' => 'required|numeric|min:0',
-                'product_variants.*.stock_quantity' => 'required|integer|min:0',
+            $cloundinary = new Cloudinary();
 
-                'images' => 'nullable|array',
-                'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048'
-            ]);
+            $product = DB::transaction(function () use (
+                $validated,
+                $request,
+                $cloundinary,
+                &$uploadedPaths
+            ) {
 
-            $prodcut = DB::transaction(function () use ($request, $validated) {
-
-                $varinats = $validated['product_variants'] ?? [];
+                $variants = $validated['product_variants'] ?? [];
                 unset(
                     $validated['product_variants'],
                     $validated['images']
                 );
 
-                $prodcut = Product::create($validated);
+                $product = Product::create($validated);
 
-                if (!empty($varinats)) {
+                if (!empty($variants)) {
 
-                    $prodcut->product_variant()->createMany(
-                        $varinats
+                    $product->product_variant()->createMany(
+                        $variants
                     );
                 }
 
                 if ($request->hasFile('images')) {
-                    foreach ($request->file('images') as $image) {
 
-                        $path = $image->store('products', 's3');
+                    foreach ($request->file('images') as $index => $image) {
 
-                        $prodcut->product_image()->create([
-                            'image_url' => $path
+                        $uploadedFile = $cloundinary->uploadApi()->upload($image->getRealPath(), [
+                            'folder' => 'velora-ecommerce/products'
+                        ]);
+
+                        $uploadedPaths[] = $uploadedFile['public_id'];
+
+                        $product->product_image()->create([
+                            'image_url' => $uploadedFile['secure_url'],
+                            'is_primary' => $index === 0,
+                            'cloudinary_id' => $uploadedFile['public_id']
                         ]);
                     }
                 }
 
-                return $prodcut;
+                return $product;
             });
-
-            $prodcut->load([
-                'category',
-                'supplier',
-                'product_variant',
-                'product_image'
-            ]);
-
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Prodcut create successfully',
-                'data' => $prodcut
-            ], 201);
         } catch (Exception $e) {
+
+            foreach ($uploadedPaths as $publicId) {
+                try {
+
+                    $cloundinary->uploadApi()->destroy($publicId);
+                } catch (\Throwable $cleanupError) {
+
+
+                    Log::error('Cloundinary failed', [
+                        'public_id' => $publicId,
+                        'error' => $cleanupError->getMessage()
+                    ]);
+                }
+            }
+
+            Log::error('Product creation failed', [
+                'error' => $e->getMessage()
+            ]);
 
             return response()->json([
                 'success' => false,
-                'message' => "There an error to create prodcut $e",
-
-            ]);
+                'message' => 'Failed to create product'
+            ], 500);
         }
+
+
+        $product->load([
+            'category',
+            'supplier',
+            'product_variant',
+            'product_image',
+            'primaryImage'
+        ]);
+
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product created successfully',
+            'data' => $product
+        ], 201);
     }
 
 
@@ -168,9 +207,23 @@ class ProductController extends Controller
 
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'removed_image_ids' => 'nullable|array',
+            'removed_image_ids.*' => [
+                'integer',
+                Rule::exists('product_images', 'id')
+                    ->where('product_id', $prodcut->id),
+            ],
+            'primary_image_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('product_images', 'id')
+                    ->where('product_id', $prodcut->id),
+            ],
         ]);
 
         $uploadedPaths = [];
+        $deletedImagePaths = [];
+        $cloundinary = new Cloudinary();
 
         try {
 
@@ -178,10 +231,12 @@ class ProductController extends Controller
                 $request,
                 $prodcut,
                 $validated,
-                &$uploadedPaths
+                $cloundinary,
+                &$uploadedPaths,
+                &$deletedImagePaths
             ) {
 
-             
+
 
                 $variants = $validated['product_variants'] ?? [];
 
@@ -189,14 +244,16 @@ class ProductController extends Controller
 
                 unset(
                     $productData['product_variants'],
-                    $productData['images']
+                    $productData['images'],
+                    $productData['removed_image_ids'],
+                    $productData['primary_image_id']
                 );
 
-              
+
 
                 $prodcut->update($productData);
 
-           
+
 
                 foreach ($variants as $variantData) {
 
@@ -216,25 +273,79 @@ class ProductController extends Controller
                     }
                 }
 
-            
+                $removedImageIds = $validated['removed_image_ids'] ?? [];
+                if (!empty($removedImageIds)) {
+                    $imagesToDelete = $prodcut->product_image()
+                        ->whereIn('id', $removedImageIds)
+                        ->get();
+
+                    foreach ($imagesToDelete as $imageToDelete) {
+                        if ($imageToDelete->cloudinary_id) {
+                            $deletedImagePaths[] = $imageToDelete->cloudinary_id;
+                        }
+                    }
+
+                    $prodcut->product_image()
+                        ->whereIn('id', $removedImageIds)
+                        ->delete();
+                }
+
+                $remainingImages = $prodcut->product_image()->orderBy('id')->get();
+                $requestedPrimaryId = $validated['primary_image_id'] ?? null;
+                $remainingPrimaryId = $remainingImages->contains(
+                    'id',
+                    $requestedPrimaryId
+                )
+                    ? (int) $requestedPrimaryId
+                    : $remainingImages->first()?->id;
+
+                $prodcut->product_image()->update(['is_primary' => false]);
+                if ($remainingPrimaryId) {
+                    $prodcut->product_image()
+                        ->where('id', $remainingPrimaryId)
+                        ->update(['is_primary' => true]);
+                }
+
+                $cloundinary = new Cloudinary();
+
 
                 if ($request->hasFile('images')) {
 
+                    $hasPrimaryImage = (bool) $remainingPrimaryId;
                     foreach ($request->file('images') as $image) {
 
-                        $path = $image->store('products', 's3');
+                        $uploadedFile = $cloundinary->uploadApi()->upload(
+                            $image->getRealPath(),
+                            [
+                                'folder' => 'velora-ecommerce/products'
+                            ]
+                        );
 
-                        $uploadedPaths[] = $path;
+                        $publicId = $uploadedFile['public_id'];
+
+                        $uploadedPaths[] = $publicId;
 
                         $prodcut->product_image()->create([
-                            'image_url' => $path,
-                            'is_primary' => false,
+                            'image_url' => $uploadedFile['secure_url'],
+                            'is_primary' => !$hasPrimaryImage,
+                            'cloudinary_id' => $publicId
                         ]);
+
+                        $hasPrimaryImage = true;
                     }
                 }
             });
 
-         
+            foreach ($deletedImagePaths as $publicId) {
+                try {
+                    $cloundinary->uploadApi()->destroy($publicId);
+                } catch (\Throwable $cleanupError) {
+                    Log::error('Cloudinary image removal failed', [
+                        'public_id' => $publicId,
+                        'error' => $cleanupError->getMessage(),
+                    ]);
+                }
+            }
 
             $prodcut->load([
                 'category',
@@ -251,10 +362,10 @@ class ProductController extends Controller
             ], 200);
         } catch (\Throwable $e) {
 
-           
+
             foreach ($uploadedPaths as $path) {
                 try {
-                    Storage::disk('s3')->delete($path);
+                    $cloundinary->uploadApi()->destroy($path);
                 } catch (\Throwable $cleanupError) {
                     report($cleanupError);
                 }
@@ -282,18 +393,34 @@ class ProductController extends Controller
             ], 422);
         }
 
-        DB::transaction(function () use ($prodcut) {
+        $cloundinary = new Cloudinary();
+
+        try {
+
+        DB::transaction(function () use ($prodcut, $cloundinary) {
+
             foreach ($prodcut->product_image as $image) {
-                if (Storage::disk('s3')->exists($image->image_url)) {
-                    Storage::disk('s3')->delete($image->image_url);
+                try {
+                    $cloundinary->uploadApi()->destroy($image->cloudinary_id);
+                } catch (\Throwable $cleanupError) {
+                    report($cleanupError);
                 }
             }
+
+            $prodcut->product_image()->delete();
+            $prodcut->product_variant()->delete();
+            $prodcut->delete();
         });
 
-        $prodcut->product_image()->delete();
-        $prodcut->product_variant()->delete();
+        }catch (\Throwable $e) {
 
-        $prodcut->delete();
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete product'
+            ], 500);
+        }
 
         return response()->json([
             'success' => true,
