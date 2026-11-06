@@ -76,7 +76,6 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
     setIsOpen(false);
   }, [location.pathname, setIsOpen]);
 
-  // Keep the offcanvas inaccessible and the page scroll-locked only on mobile.
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 1023px)");
     const originalOverflow = document.body.style.overflow;

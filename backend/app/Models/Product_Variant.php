@@ -12,8 +12,6 @@ class Product_Variant extends Model
     protected $table = 'product_variants'; 
     protected $guarded = [];
 
-
-
     protected $fillable = [
 
         'product_id',
