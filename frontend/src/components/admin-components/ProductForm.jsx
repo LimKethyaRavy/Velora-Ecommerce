@@ -4,6 +4,8 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { createProduct, updateProduct } from "../../service/productService";
 
+let nextVariantKey = 0;
+
 /* ---------- Design tokens ----------
    ink      #1f1b2d   text
    muted    #6b6880   secondary text
@@ -20,6 +22,7 @@ const fieldClass =
 const labelClass = "block text-sm font-medium text-[#1f1b2d]";
 
 const emptyVariant = () => ({
+  clientKey: `variant-${++nextVariantKey}`,
   sku: "",
   size: "",
   color: "",
@@ -44,6 +47,7 @@ const normalizeProduct = (product = {}) => {
     product_variants:
       Array.isArray(productVariants) && productVariants.length > 0
         ? productVariants.map((variant) => ({
+            clientKey: `variant-${++nextVariantKey}`,
             ...(variant.id != null ? { id: variant.id } : {}),
             sku: variant.sku ?? "",
             size: variant.size ?? "",
@@ -102,6 +106,8 @@ export default function ProductForm({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [previews, setPreviews] = useState([]);
+  const [selectedImageVariantKey, setSelectedImageVariantKey] =
+    useState("__general__");
 
   const [existingImages, setExistingImages] = useState(
     initialValues?.product_image ?? [],
@@ -125,7 +131,7 @@ export default function ProductForm({
   }, [initialValues]);
 
   useEffect(() => {
-    const urls = form.images.map((image) => URL.createObjectURL(image));
+    const urls = form.images.map(({ file }) => URL.createObjectURL(file));
     setPreviews(urls);
 
     return () => urls.forEach((url) => URL.revokeObjectURL(url));
@@ -161,7 +167,7 @@ export default function ProductForm({
     }));
   };
 
-  const handleImagesChange = (event) => {
+  const handleImagesChange = (event, variantKey = null) => {
     const files = Array.from(event.target.files ?? []);
     const validFiles = files.filter(
       (file) =>
@@ -179,7 +185,10 @@ export default function ProductForm({
 
     setForm((current) => ({
       ...current,
-      images: [...current.images, ...validFiles],
+      images: [
+        ...current.images,
+        ...validFiles.map((file) => ({ file, variantKey })),
+      ],
     }));
     event.target.value = "";
   };
@@ -202,12 +211,21 @@ export default function ProductForm({
 
       formData.append("is_active", form.is_active ? "1" : "0");
       form.product_variants.forEach((variant, index) => {
-        Object.entries(variant).forEach(([key, value]) => {
-          formData.append(`product_variants[${index}][${key}]`, value);
-        });
+        Object.entries(variant)
+          .filter(([key]) => key !== "clientKey")
+          .forEach(([key, value]) => {
+            formData.append(`product_variants[${index}][${key}]`, value);
+          });
       });
-      form.images.forEach((image, index) => {
-        formData.append(`images[${index}]`, image);
+      form.images.forEach(({ file, variantKey }, index) => {
+        const variantIndex = form.product_variants.findIndex(
+          (variant) => variant.clientKey === variantKey,
+        );
+        formData.append(`images[${index}]`, file);
+        formData.append(
+          `image_variant_indexes[${index}]`,
+          variantIndex < 0 ? "" : String(variantIndex),
+        );
       });
       removedImageIds.forEach((imageId, index) => {
         formData.append(`removed_image_ids[${index}]`, imageId);
@@ -258,6 +276,35 @@ export default function ProductForm({
     : isEdit
       ? "Save changes"
       : "Create product";
+
+  const colorGroups = form.product_variants.reduce((groups, variant, index) => {
+    const color = String(variant.color || "").trim();
+    const key = color.toLowerCase() || variant.clientKey;
+    let group = groups.find((item) => item.key === key);
+
+    if (!group) {
+      group = {
+        key,
+        label: color || `Variant ${index + 1} (add a color)`,
+        variantKey: variant.clientKey,
+        variantKeys: [],
+        variantIds: [],
+      };
+      groups.push(group);
+    }
+
+    group.variantKeys.push(variant.clientKey);
+    if (variant.id != null) group.variantIds.push(variant.id);
+    return groups;
+  }, []);
+  const selectedImageGroup = colorGroups.find(
+    (group) => group.key === selectedImageVariantKey,
+  );
+
+  const imageGroups = [
+    { key: "general", label: "General photos", variantKey: null },
+    ...colorGroups,
+  ];
 
   const actionButtons = (
     <div className="flex items-center gap-2">
@@ -554,8 +601,49 @@ export default function ProductForm({
 
             <Section
               title="Photos"
-              hint="First photo is the cover. JPG, PNG or WEBP, up to 2MB each."
+              hint="Choose a color before uploading so each variant has its own photos. JPG, PNG or WEBP, up to 2MB each."
             >
+              <div className="space-y-3">
+                <div>
+                  <p className="mb-2 text-xs font-medium text-[#6b6880]">
+                    Upload photos for
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedImageVariantKey("__general__")}
+                      aria-pressed={!selectedImageGroup}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                        !selectedImageGroup
+                          ? "border-[#5b2d8e] bg-[#5b2d8e] text-white"
+                          : "border-[#e4e1ec] bg-white text-[#6b6880] hover:border-[#5b2d8e]"
+                      }`}
+                    >
+                      All colors
+                    </button>
+                    {colorGroups.map((group) => (
+                      <button
+                        key={group.key}
+                        type="button"
+                        onClick={() => setSelectedImageVariantKey(group.key)}
+                        aria-pressed={selectedImageGroup?.key === group.key}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                          selectedImageGroup?.key === group.key
+                            ? "border-[#5b2d8e] bg-[#5b2d8e] text-white"
+                            : "border-[#e4e1ec] bg-white text-[#6b6880] hover:border-[#5b2d8e]"
+                        }`}
+                      >
+                        {group.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-[#6b6880]">
+                  {selectedImageGroup
+                    ? `New photos will be assigned to ${selectedImageGroup.label}.`
+                    : "General photos are shown for every color."}
+                </p>
+              </div>
               <div className="grid grid-cols-3 gap-3">
                 {existingImages.map((image) => (
                   <div
@@ -567,6 +655,19 @@ export default function ProductForm({
                       alt="Product photo"
                       className="h-full w-full object-cover"
                     />
+                    {form.product_variants.find(
+                      (variant) =>
+                        String(variant.id) === String(image.variant_id),
+                    )?.color && (
+                      <span className="absolute right-9 top-1.5 rounded bg-[#5b2d8e]/90 px-2 py-0.5 text-[10px] font-medium text-white">
+                        {
+                          form.product_variants.find(
+                            (variant) =>
+                              String(variant.id) === String(image.variant_id),
+                          )?.color
+                        }
+                      </span>
+                    )}
                     <span className="absolute bottom-1.5 left-1.5 rounded bg-[#1f1b2d]/80 px-1.5 py-0.5 text-[11px] font-medium text-white">
                       {Number(primaryImageId) === Number(image.id)
                         ? "Cover"
@@ -614,6 +715,21 @@ export default function ProductForm({
                       alt={`Product photo ${index + 1}`}
                       className="h-full w-full object-cover"
                     />
+                    {colorGroups.find((group) =>
+                      group.variantKeys.includes(
+                        form.images[index]?.variantKey,
+                      ),
+                    ) && (
+                      <span className="absolute left-1.5 top-1.5 rounded bg-[#5b2d8e]/90 px-2 py-0.5 text-[10px] font-medium text-white">
+                        {
+                          colorGroups.find((group) =>
+                            group.variantKeys.includes(
+                              form.images[index]?.variantKey,
+                            ),
+                          )?.label
+                        }
+                      </span>
+                    )}
                     {index === 0 && existingImages.length === 0 && !primaryImageId && (
                       <span className="absolute bottom-1.5 left-1.5 rounded bg-[#1f1b2d]/80 px-1.5 py-0.5 text-[11px] font-medium text-white">
                         Cover
@@ -646,7 +762,12 @@ export default function ProductForm({
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     multiple
-                    onChange={handleImagesChange}
+                    onChange={(event) =>
+                      handleImagesChange(
+                        event,
+                        selectedImageGroup?.variantKey ?? null,
+                      )
+                    }
                     className="sr-only"
                   />
                 </label>

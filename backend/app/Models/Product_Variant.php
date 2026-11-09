@@ -31,13 +31,13 @@ class Product_Variant extends Model
 
     public function orderItems(){
 
-        return $this->hasMany(Product_Variant::class, 'product_variant_id');
+        return $this->hasMany(Order_Items::class, 'product_variant_id');
 
     }
 
     public function images(){
 
-    return $this->hasMany(Product_Variant:: class, 'variant_id');
+    return $this->hasMany(Product_image:: class, 'variant_id');
 
     }
 

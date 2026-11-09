@@ -48,6 +48,11 @@ class ProductController extends Controller
     public function store(Request $request)
     {
 
+        $requestedVariants = $request->input('product_variants', []);
+        $variantIndexes = is_array($requestedVariants)
+            ? array_keys($requestedVariants)
+            : [];
+
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'supplier_id' => 'required|exists:suppliers,id',
@@ -65,7 +70,13 @@ class ProductController extends Controller
             'product_variants.*.stock_quantity' => 'required|integer|min:0',
 
             'images' => 'nullable|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048'
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image_variant_indexes' => 'nullable|array',
+            'image_variant_indexes.*' => [
+                'nullable',
+                'integer',
+                Rule::in($variantIndexes),
+            ],
         ]);
 
         $uploadedPaths = [];
@@ -84,21 +95,30 @@ class ProductController extends Controller
                 $variants = $validated['product_variants'] ?? [];
                 unset(
                     $validated['product_variants'],
-                    $validated['images']
+                    $validated['images'],
+                    $validated['image_variant_indexes']
                 );
 
                 $product = Product::create($validated);
 
                 if (!empty($variants)) {
 
-                    $product->product_variant()->createMany(
+                    $createdVariants = $product->product_variant()->createMany(
                         $variants
                     );
+                } else {
+                    $createdVariants = collect();
                 }
 
                 if ($request->hasFile('images')) {
 
                     foreach ($request->file('images') as $index => $image) {
+                        $variantIndex = $request->input(
+                            "image_variant_indexes.{$index}"
+                        );
+                        $variant = $variantIndex === null
+                            ? null
+                            : $createdVariants->values()->get((int) $variantIndex);
 
                         $uploadedFile = $cloundinary->uploadApi()->upload($image->getRealPath(), [
                             'folder' => 'velora-ecommerce/products'
@@ -107,6 +127,7 @@ class ProductController extends Controller
                         $uploadedPaths[] = $uploadedFile['public_id'];
 
                         $product->product_image()->create([
+                            'variant_id' => $variant?->id,
                             'image_url' => $uploadedFile['secure_url'],
                             'is_primary' => $index === 0,
                             'cloudinary_id' => $uploadedFile['public_id']
@@ -174,6 +195,11 @@ class ProductController extends Controller
     {
         $prodcut = Product::findOrFail($id);
 
+        $requestedVariants = $request->input('product_variants', []);
+        $variantIndexes = is_array($requestedVariants)
+            ? array_keys($requestedVariants)
+            : [];
+
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'supplier_id' => 'required|exists:suppliers,id',
@@ -207,6 +233,12 @@ class ProductController extends Controller
 
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'image_variant_indexes' => 'nullable|array',
+            'image_variant_indexes.*' => [
+                'nullable',
+                'integer',
+                Rule::in($variantIndexes),
+            ],
             'removed_image_ids' => 'nullable|array',
             'removed_image_ids.*' => [
                 'integer',
@@ -245,6 +277,7 @@ class ProductController extends Controller
                 unset(
                     $productData['product_variants'],
                     $productData['images'],
+                    $productData['image_variant_indexes'],
                     $productData['removed_image_ids'],
                     $productData['primary_image_id']
                 );
@@ -255,7 +288,8 @@ class ProductController extends Controller
 
 
 
-                foreach ($variants as $variantData) {
+                $variantIdsByIndex = [];
+                foreach ($variants as $variantIndex => $variantData) {
 
                     if (isset($variantData['id'])) {
 
@@ -268,9 +302,12 @@ class ProductController extends Controller
                             ->update($variantData);
                     } else {
 
-                        $prodcut->product_variant()
+                        $variant = $prodcut->product_variant()
                             ->create($variantData);
+                        $variantId = $variant->id;
                     }
+
+                    $variantIdsByIndex[$variantIndex] = $variantId;
                 }
 
                 $removedImageIds = $validated['removed_image_ids'] ?? [];
@@ -312,7 +349,13 @@ class ProductController extends Controller
                 if ($request->hasFile('images')) {
 
                     $hasPrimaryImage = (bool) $remainingPrimaryId;
-                    foreach ($request->file('images') as $image) {
+                    foreach ($request->file('images') as $index => $image) {
+                        $variantIndex = $request->input(
+                            "image_variant_indexes.{$index}"
+                        );
+                        $variantId = $variantIndex === null
+                            ? null
+                            : ($variantIdsByIndex[$variantIndex] ?? null);
 
                         $uploadedFile = $cloundinary->uploadApi()->upload(
                             $image->getRealPath(),
@@ -326,6 +369,7 @@ class ProductController extends Controller
                         $uploadedPaths[] = $publicId;
 
                         $prodcut->product_image()->create([
+                            'variant_id' => $variantId,
                             'image_url' => $uploadedFile['secure_url'],
                             'is_primary' => !$hasPrimaryImage,
                             'cloudinary_id' => $publicId

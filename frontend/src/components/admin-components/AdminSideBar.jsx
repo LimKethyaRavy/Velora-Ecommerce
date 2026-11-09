@@ -59,7 +59,7 @@ const sidebarLinks = [
   },
 ];
 
-// Badge Styles
+
 const badgeStyles = {
   gray: "bg-gray-100 text-gray-600",
   yellow: "bg-amber-200 text-amber-900",
@@ -71,7 +71,7 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
     () => window.matchMedia("(max-width: 1023px)").matches
   );
 
-  // Close sidebar when route changes
+ 
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname, setIsOpen]);
@@ -87,8 +87,11 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
         : originalOverflow;
 
       if (!mediaQuery.matches && isOpen) {
+
         setIsOpen(false);
+
       }
+
     };
 
     updateScrollLock();
@@ -120,7 +123,7 @@ const AdminSideBar = ({ isOpen, setIsOpen }) => {
   return (
     <>
      
-      {/* Sidebar */}
+
       <aside
         id="admin-sidebar"
         aria-label="Admin navigation"
