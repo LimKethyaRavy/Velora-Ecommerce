@@ -36,7 +36,7 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $prodcut = $query->paginate(10);
+        $prodcut = $query->paginate(5);
 
         return response()->json([
             'success' => true,

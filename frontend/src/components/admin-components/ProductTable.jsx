@@ -1,6 +1,24 @@
 import React from "react";
 import { Pencil, Trash2, PackageOpen } from "lucide-react";
 
+const COLOR_SWATCHES = {
+  black: "#111827",
+  white: "#ffffff",
+  red: "#dc2626",
+  blue: "#2563eb",
+  navy: "#1e3a8a",
+  green: "#16a34a",
+  yellow: "#facc15",
+  orange: "#f97316",
+  purple: "#9333ea",
+  pink: "#ec4899",
+  brown: "#92400e",
+  gray: "#6b7280",
+  grey: "#6b7280",
+  beige: "#d6c6a5",
+  cream: "#f5f0dc",
+};
+
 const money = (value) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     Number(value || 0),
@@ -29,10 +47,11 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[850px] text-left text-sm">
+      <table className="w-full min-w-[960px] text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-5 py-4">Product</th>
+            <th className="px-5 py-4">Variants</th>
             <th className="px-5 py-4">Category</th>
             <th className="px-5 py-4">Price</th>
             <th className="px-5 py-4">Stock</th>
@@ -43,6 +62,19 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
         <tbody className="divide-y divide-slate-100">
           {products.map((product) => {
             const variants = product.product_variant ?? [];
+            const colors = [
+              ...new Map(
+                variants
+                  .filter((variant) => variant.color?.trim())
+                  .map((variant) => [
+                    variant.color.trim().toLowerCase(),
+                    variant.color.trim(),
+                  ]),
+              ).values(),
+            ];
+            const sizes = new Set(
+              variants.map((variant) => variant.size?.trim()).filter(Boolean),
+            );
             const stock = variants.reduce(
               (sum, v) => sum + Number(v.stock_quantity || 0),
               0,
@@ -81,6 +113,51 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
                       </div>
                     </div>
                   </div>
+                </td>
+                <td className="px-5 py-4">
+                  {colors.length ? (
+                    <div className="max-w-64">
+                      <div className="flex flex-wrap gap-2">
+                        {colors.slice(0, 4).map((color) => (
+                          <span
+                            key={color.toLowerCase()}
+                            title={color}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600"
+                          >
+                            <span
+                              aria-hidden="true"
+                              className={`h-3 w-3 shrink-0 rounded-full border ${
+                                color.toLowerCase() === "white"
+                                  ? "border-slate-300"
+                                  : "border-transparent"
+                              }`}
+                              style={{
+                                backgroundColor:
+                                  COLOR_SWATCHES[color.toLowerCase()] ??
+                                  "#a78bfa",
+                              }}
+                            />
+                            {color}
+                          </span>
+                        ))}
+                        {colors.length > 4 && (
+                          <span
+                            title={colors.slice(4).join(", ")}
+                            className="inline-flex items-center rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+                          >
+                            +{colors.length - 4}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {colors.length} {colors.length === 1 ? "color" : "colors"}
+                        {sizes.size > 0 &&
+                          ` / ${sizes.size} ${sizes.size === 1 ? "size" : "sizes"}`}
+                      </p>
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </td>
                 <td className="px-5 py-4 text-slate-600">
                   {product.category?.name ?? "—"}
