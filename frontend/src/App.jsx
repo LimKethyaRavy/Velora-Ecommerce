@@ -11,6 +11,7 @@ import ProductForm from './components/admin-components/ProductForm';
 import { getCategory } from './service/categoryService';
 import { getSupplier } from './service/supplierService';
 import { showProduct } from './service/productService';
+import LoginScreen from './page/admin/auth/LoginScreen';
 
 function ProductFormPage() {
   const navigate = useNavigate();
@@ -67,18 +68,48 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route
+          path="/"
+          element={<Navigate to="/admin/login" replace />}
+        />
+
+ 
+        <Route
+          path="/admin/login"
+          element={<LoginScreen />}
+        />
+
+  
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="dashboard" replace />} />
+
+          {/* Default admin route */}
+          <Route
+            index
+            element={<Navigate to="/admin/login" replace />}
+          />
+
           <Route path="dashboard" element={<Dashboard />} />
+
           <Route path="products" element={<ProductFeature />} />
+
           <Route path="products/create" element={<ProductFormPage />} />
+
           <Route path="products/:id/edit" element={<ProductFormPage />} />
-          <Route path="productfeature" element={<Navigate to="/admin/products" replace />} />
+
+          <Route
+            path="productfeature"
+            element={<Navigate to="/admin/products" replace />}
+          />
+
           <Route path="supplier" element={<Supplier />} />
+
           <Route path="category" element={<Category />} />
+
           <Route path="order" element={<Order />} />
+
         </Route>
+
+       
       </Routes>
     </BrowserRouter>
   )
