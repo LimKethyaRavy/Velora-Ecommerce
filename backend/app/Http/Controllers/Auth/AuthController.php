@@ -6,26 +6,39 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Hash;
+
 
 
 class AuthController extends Controller
 {
-    public function ensureCustomerPf(User $user): void {
+    // public function ensureCustomerPf(User $user): void {
 
-    if($user->role === "customer") {
+    // if($user->role === "customer") {
 
-    $nameParts = explode('', $user->name, 2);
+    // $nameParts = explode('', $user->name, 2);
 
-    User::create([
+    // User::create([
 
-        'user_id'  => $user->id,
-        'first_name' => $nameParts[0] ?? $user->name,
-        'last_name' => $nameParts[1] ?? ' ',
+    //     'user_id'  => $user->id,
+    //     'first_name' => $nameParts[0] ?? $user->name,
+    //     'last_name' => $nameParts[1] ?? ' ',
 
-    ]);
-    }
+    // ]);
+    // }
+
+    // }
+
+    public function index(){
+
+    $users = User::lastest()->get();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Get user successfully',
+        'data' => $users
+    ], 200);
 
     }
 
@@ -55,9 +68,9 @@ class AuthController extends Controller
         'role' => 'customer'
     ]);
 
-    $this->ensureCustomerPf($user);
+    // $this->ensureCustomerPf($user);
 
-    $token = $user->createToken('velora_auth_token')->plainTextToken;
+    $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
         'success' => true,
@@ -68,11 +81,11 @@ class AuthController extends Controller
 
     ], 201);
 
-    }catch(Exception){
+    }catch(Exception $e){
 
     return response()->json([
         'success' => false,
-        'message' => 'failed to create an account',
+        'message' => 'failed to create an account'. $e,
 
     ], 400);
 
@@ -108,7 +121,7 @@ class AuthController extends Controller
 
     $user->tokens()->delete();
 
-    $token = $user->createToken('velora_auth_toen')->plainTextToken();
+    $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
         'success' => true,
