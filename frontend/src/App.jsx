@@ -12,6 +12,7 @@ import { getCategory } from './service/categoryService';
 import { getSupplier } from './service/supplierService';
 import { showProduct } from './service/productService';
 import LoginScreen from './page/admin/auth/LoginScreen';
+import AuthContext from './context/AuthContext';
 
 function ProductFormPage() {
   const navigate = useNavigate();
@@ -67,6 +68,8 @@ function ProductFormPage() {
 function App() {
   return (
     <BrowserRouter>
+
+  
       <Routes>
         <Route
           path="/"
@@ -111,6 +114,8 @@ function App() {
 
        
       </Routes>
+
+  
     </BrowserRouter>
   )
 } 

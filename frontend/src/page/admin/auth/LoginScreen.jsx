@@ -9,18 +9,55 @@ import {
 } from "lucide-react";
 
 import AuthScreenLayout from "../../../layouts/AuthScreenLayout";
-
+import { useAuth } from "../../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useAlert } from "../../../UI/AlertModel";
 const LoginScreen = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const {login} = useAuth();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const alert = useAlert();
+
+
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setMessage("Login UI is ready! Laravel authentication comes next.");
+    setMessage('');
+    setLoading(true);
+
+    try {
+      await login({
+        email,
+        password
+      });
+
+      alert.success({
+      title: "Welcome back",
+      message: "You’re signed in to Velora Atelier Admin.",
+      duration: 1500,
+    });
+
+      navigate('/admin/dashboard', {replace: true});
+    }catch(error){
+
+      setMessage(
+        error.response?.data?.message ||
+        'Login failed Please Try agiagn'
+      )
+
+
+    }finally {
+
+      setLoading(false);
+    }
+
   };
 
   return (
@@ -136,10 +173,12 @@ const LoginScreen = () => {
           {/* Sign In */}
           <button
             type="submit"
+            disabled={loading}
             className="flex h-[58px] w-full items-center justify-center gap-3 rounded-xl bg-[#191919] text-base font-medium text-white transition duration-300 hover:bg-black hover:shadow-lg active:scale-[0.99]"
           >
-            Sign In
-            <ArrowRight size={20} />
+            {loading ? 'Signing in...' :'Sign in'}
+            {!loading && <ArrowRight size={20} />}
+            {/* <ArrowRight size={20} /> */}
           </button>
 
         </form>

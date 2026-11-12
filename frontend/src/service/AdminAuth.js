@@ -1,8 +1,8 @@
-import { api } from "./api";
+import { api } from "../libs/api";
 
 export const loginAdmin = async (credentials) => {
 
-    const response = await api.post("http://127.0.0.1:8000/api/register", credentials);
+    const response = await api.post("/login", credentials);
 
     return response.data;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import Swal from "sweetalert2";
+import { useAlert } from "../../UI/AlertModel.jsx";
 import {
   createSupplier,
   deleteSupplier,
@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 
 const Supplier = () => {
+  const alert = useAlert();
   const emptyForm = {
     name: "",
     contact_name: "",
@@ -81,15 +82,14 @@ const Supplier = () => {
     } catch (error) {
       console.log(error);
 
-      Swal.fire({
-        icon: "error",
+      alert.error({
         title: "Could not load supplier",
-        text: "Please try agiagn",
+        message: "Please try again.",
       });
     } finally {
       setLoading(false);
     }
-  }, [page, search, status]);
+  }, [alert, page, search, status]);
 
   useEffect(() => {
     loadSupplier();
@@ -155,24 +155,21 @@ const Supplier = () => {
 
       setModalOpen(false);
 
-      await Swal.fire({
-        icon: "success",
+      await alert.success({
         title: editing ? "Supplier Updated!" : "Supplier Created!",
-        text: editing
+        message: editing
           ? "Supplier updated successfully."
           : "New supplier added successfully.",
-        timer: 1800,
-        showConfirmButton: false,
+        duration: 1800,
       });
 
       await loadSupplier();
     } catch (error) {
       console.log(error);
 
-      Swal.fire({
-        icon: "error",
+      alert.error({
         title: "Not saved",
-        text:
+        message:
           error?.response?.data?.message ??
           error.message ??
           "Please try again.",
@@ -183,37 +180,31 @@ const Supplier = () => {
   };
 
   const handleDelete = async (item) => {
-    const result = await Swal.fire({
-      title: "Are you sure to delete supplier ?",
-      text: `Delete ${item.name} ? This action cannot be undone.`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete",
-      confirmButtonColor: "#dc2626",
-      reverseButtons: true,
+    const confirmed = await alert.confirm({
+      title: "Are you sure you want to delete this supplier?",
+      message: "This supplier will be permanently deleted.",
+      detail: item.name,
+      confirmText: "Yes, delete",
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirmed) return;
 
     try {
       await deleteSupplier(item.id);
 
-      await Swal.fire({
-        icon: "success",
+      await alert.success({
         title: "Supplier Deleted!",
-        text: "Supplier has been deleted successfully.",
-        timer: 2000,
-        showConfirmButton: false,
+        message: "Supplier has been deleted successfully.",
+        duration: 2000,
       });
 
       await loadSupplier();
     } catch (error) {
       console.log(error);
 
-      Swal.fire({
-        icon: "error",
+      alert.error({
         title: "Delete Failed!",
-        text: error?.response?.data?.message ?? "Something went wrong.",
+        message: error?.response?.data?.message ?? "Something went wrong.",
       });
     }
   };

@@ -1,9 +1,10 @@
 
-import React, { createContext, useState } from 'react'
+import React, { createContext, useContext, useState } from 'react'
+import { loginAdmin } from '../service/AdminAuth';
 
-const authContext = createContext(null);
+const AuthContext = createContext(null);
 
-const AuthContext = ({children}) => {
+const AuthProvider = ({children}) => {
 
     const [user, setUser] = useState(() =>{
 
@@ -18,11 +19,32 @@ const AuthContext = ({children}) => {
 
     const isAuthenticated = !!token;
 
-  return (
-    <div>
+    const login = async (credentials) => {
+      const data = await loginAdmin(credentials);
+      
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
 
-    </div>
+      setToken(data.token);
+      setUser(data.user);
+
+      return data
+    }
+
+  return (
+    
+
+      <AuthContext.Provider value={{user, token, isAuthenticated, login}} >
+        {children}
+      </AuthContext.Provider>
+
+
   )
 }
 
-export default AuthContext
+export const useAuth =() => {
+
+  return useContext(AuthContext);
+}
+
+export default AuthProvider

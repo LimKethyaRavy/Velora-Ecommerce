@@ -13,7 +13,7 @@ import {
   updateCategory,
 } from "../../service/categoryService";
 
-import Swal from "sweetalert2";
+import { useAlert } from "../../UI/AlertModel.jsx";
 
 import {
   FolderTree,
@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 
 const Category = () => {
+  const alert = useAlert();
   const emptyForm = {
     parent_id: "",
     name: "",
@@ -86,15 +87,14 @@ const Category = () => {
     } catch (error) {
       console.error(error);
 
-      Swal.fire({
-        icon: "error",
+      alert.error({
         title: "Could not load categories",
-        text: error?.response?.data?.message ?? "Please try again.",
+        message: error?.response?.data?.message ?? "Please try again.",
       });
     } finally {
       setLoading(false);
     }
-  }, [page, search]);
+  }, [alert, page, search]);
 
   useEffect(() => {
     loadCategory();
@@ -201,10 +201,9 @@ const Category = () => {
     event.preventDefault();
 
     if (!form.name.trim() || !form.slug.trim()) {
-      Swal.fire({
-        icon: "warning",
+      alert.warning({
         title: "Required fields",
-        text: "Please enter a category name and slug.",
+        message: "Please enter a category name and slug.",
       });
       return;
     }
@@ -214,10 +213,9 @@ const Category = () => {
       form.parent_id &&
       String(form.parent_id) === String(editing.id)
     ) {
-      Swal.fire({
-        icon: "warning",
+      alert.warning({
         title: "Invalid parent",
-        text: "A category cannot be its own parent.",
+        message: "A category cannot be its own parent.",
       });
       return;
     }
@@ -240,21 +238,18 @@ const Category = () => {
 
       setModalOpen(false);
 
-      await Swal.fire({
-        icon: "success",
+      await alert.success({
         title: editing ? "Category updated!" : "Category created!",
-        timer: 1500,
-        showConfirmButton: false,
+        duration: 1500,
       });
 
       await loadCategory();
     } catch (error) {
       console.error(error);
 
-      Swal.fire({
-        icon: "error",
+      alert.error({
         title: "Could not save category",
-        text:
+        message:
           error?.response?.data?.message ?? "Please try again.",
       });
     } finally {
@@ -263,36 +258,30 @@ const Category = () => {
   };
 
   const handleDelete = async (item) => {
-    const result = await Swal.fire({
+    const confirmed = await alert.confirm({
       title: "Delete this category?",
-      text: `Delete "${item.name}"?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete",
-      confirmButtonColor: "#dc2626",
-      reverseButtons: true,
+      message: "This category will be permanently deleted.",
+      detail: item.name,
+      confirmText: "Yes, delete",
     });
 
-    if (!result.isConfirmed) return;
+    if (!confirmed) return;
 
     try {
       await deleteCategory(item.id);
 
-      await Swal.fire({
-        icon: "success",
+      await alert.success({
         title: "Category deleted!",
-        timer: 1500,
-        showConfirmButton: false,
+        duration: 1500,
       });
 
       await loadCategory();
     } catch (error) {
       console.error(error);
 
-      Swal.fire({
-        icon: "error",
+      alert.error({
         title: "Delete failed",
-        text:
+        message:
           error?.response?.data?.message ?? "Something went wrong.",
       });
     }
