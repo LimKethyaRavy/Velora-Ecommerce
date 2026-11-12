@@ -1,5 +1,6 @@
 import './App.css'
 import AdminLayout from './layouts/AdminLayout'
+import PublicLayout from './layouts/PublicLayout'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from 'react';
 import Dashboard from './page/admin/Dashboard';
@@ -12,7 +13,7 @@ import { getCategory } from './service/categoryService';
 import { getSupplier } from './service/supplierService';
 import { showProduct } from './service/productService';
 import LoginScreen from './page/admin/auth/LoginScreen';
-import AuthContext from './context/AuthContext';
+import HomePage from './page/public_site/HomePage';
 
 function ProductFormPage() {
   const navigate = useNavigate();
@@ -68,56 +69,41 @@ function ProductFormPage() {
 function App() {
   return (
     <BrowserRouter>
-
-  
       <Routes>
-        <Route
-          path="/"
-          element={<Navigate to="/admin/login" replace />}
-        />
+        <Route path="/" element={<PublicLayout />}>
+          <Route index element={<Navigate to="/home" replace />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="shop" element={<Navigate to="/shop/home" replace />} />
+          <Route path="shop/home" element={<HomePage />} />
+        </Route>
 
- 
         <Route
           path="/admin/login"
           element={<LoginScreen />}
         />
 
-  
         <Route path="/admin" element={<AdminLayout />}>
-
-          {/* Default admin route */}
           <Route
             index
             element={<Navigate to="/admin/login" replace />}
           />
 
           <Route path="dashboard" element={<Dashboard />} />
-
           <Route path="products" element={<ProductFeature />} />
-
           <Route path="products/create" element={<ProductFormPage />} />
-
           <Route path="products/:id/edit" element={<ProductFormPage />} />
-
           <Route
             path="productfeature"
             element={<Navigate to="/admin/products" replace />}
           />
 
           <Route path="supplier" element={<Supplier />} />
-
           <Route path="category" element={<Category />} />
-
           <Route path="order" element={<Order />} />
-
         </Route>
-
-       
       </Routes>
-
-  
     </BrowserRouter>
   )
-} 
+}
 
 export default App

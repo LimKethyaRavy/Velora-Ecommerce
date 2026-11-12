@@ -1,15 +1,26 @@
 import React from 'react'
-import { Link, Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
+
+
+import AccouncementBar from '../components/public-site-components/AccouncementBar.jsx'
+import Navbar from '../components/public-site-components/Navbar'
 
 const PublicLayout = () => {
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
-      <header className="border-b border-neutral-200 px-6 py-4">
-        <Link to="/" className="font-semibold tracking-wide">VELORA</Link>
-      </header>
-      <main className="p-6">
-        <Outlet />
+    <div className="min-h-screen bg-white text-neutral-900 flex flex-col">
+
+
+        <AccouncementBar />
+
+        <Navbar />
+
+      <main>
+
+      <Outlet />
+
       </main>
+      
+
     </div>
   )
 }
