@@ -1,19 +1,27 @@
-import './App.css'
-import AdminLayout from './layouts/AdminLayout'
-import PublicLayout from './layouts/PublicLayout'
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from 'react';
-import Dashboard from './page/admin/Dashboard';
-import ProductFeature from './page/admin/products/ProductFeature';
-import Supplier from './page/admin/Supplier';
-import Category from './page/admin/Category';
-import Order from './page/admin/Order';
-import ProductForm from './components/admin-components/ProductForm';
-import { getCategory } from './service/categoryService';
-import { getSupplier } from './service/supplierService';
-import { showProduct } from './service/productService';
-import LoginScreen from './page/admin/auth/LoginScreen';
-import HomePage from './page/public_site/HomePage';
+import "./App.css";
+import AdminLayout from "./layouts/AdminLayout";
+import PublicLayout from "./layouts/PublicLayout";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import { useEffect, useState } from "react";
+import Dashboard from "./page/admin/Dashboard";
+import ProductFeature from "./page/admin/products/ProductFeature";
+import Supplier from "./page/admin/Supplier";
+import Category from "./page/admin/category/Category";
+import Order from "./page/admin/Order";
+import ProductForm from "./components/admin-components/ProductForm";
+import { getCategory } from "./service/categoryService";
+import { getSupplier } from "./service/supplierService";
+import { showProduct } from "./service/productService";
+import LoginScreen from "./page/admin/auth/LoginScreen";
+import HomePage from "./page/public_site/HomePage";
+import CategoryForm from "./page/admin/category/CategoryForm";
 
 function ProductFormPage() {
   const navigate = useNavigate();
@@ -28,19 +36,27 @@ function ProductFormPage() {
     const loadFormData = async () => {
       try {
         const [categoryResponse, supplierResponse] = await Promise.all([
-          getCategory({ page: 1, search: '' }),
+          getCategory({ page: 1, search: "" }),
           getSupplier(),
         ]);
 
-        setCategories(Array.isArray(categoryResponse?.data) ? categoryResponse.data : categoryResponse?.data?.data ?? []);
-        setSuppliers(Array.isArray(supplierResponse?.data) ? supplierResponse.data : supplierResponse?.data?.data ?? []);
+        setCategories(
+          Array.isArray(categoryResponse?.data)
+            ? categoryResponse.data
+            : (categoryResponse?.data?.data ?? []),
+        );
+        setSuppliers(
+          Array.isArray(supplierResponse?.data)
+            ? supplierResponse.data
+            : (supplierResponse?.data?.data ?? []),
+        );
 
         if (isEdit) {
           const productResponse = await showProduct(id);
           setInitialValues(productResponse?.data ?? productResponse);
         }
       } catch (error) {
-        console.error('Failed to load product form data', error);
+        console.error("Failed to load product form data", error);
       } finally {
         setLoading(false);
       }
@@ -50,18 +66,22 @@ function ProductFormPage() {
   }, [id, isEdit]);
 
   if (loading) {
-    return <div className="flex min-h-[200px] items-center justify-center text-sm text-slate-500">Loading product form...</div>;
+    return (
+      <div className="flex min-h-[200px] items-center justify-center text-sm text-slate-500">
+        Loading product form...
+      </div>
+    );
   }
 
   return (
     <ProductForm
-      mode={isEdit ? 'edit' : 'create'}
+      mode={isEdit ? "edit" : "create"}
       productId={id}
       initialValues={initialValues}
       categories={categories}
       suppliers={suppliers}
-      onClose={() => navigate('/admin/products')}
-      onSuccess={() => navigate('/admin/products')}
+      onClose={() => navigate("/admin/products")}
+      onSuccess={() => navigate("/admin/products")}
     />
   );
 }
@@ -77,17 +97,12 @@ function App() {
           <Route path="shop/home" element={<HomePage />} />
         </Route>
 
-        <Route
-          path="/admin/login"
-          element={<LoginScreen />}
-        />
+        <Route path="/admin/login" element={<LoginScreen />} />
 
         <Route path="/admin" element={<AdminLayout />}>
-          <Route
-            index
-            element={<Navigate to="/admin/login" replace />}
-          />
+          <Route index element={<Navigate to="/admin/login" replace />} />
 
+          <Route path="storefront" element={<HomePage />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ProductFeature />} />
           <Route path="products/create" element={<ProductFormPage />} />
@@ -99,11 +114,13 @@ function App() {
 
           <Route path="supplier" element={<Supplier />} />
           <Route path="category" element={<Category />} />
+          <Route path="category/create" element={<CategoryForm />} />
+          <Route path="category/:id/edit" element={<CategoryForm />} />
           <Route path="order" element={<Order />} />
         </Route>
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

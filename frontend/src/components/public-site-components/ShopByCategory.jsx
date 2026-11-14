@@ -32,13 +32,13 @@ const ShopByCategory = () => {
     {
       id: 5,
       title: "Accessories",
-      image: "/images/categories/accessories.jpg",
+      image: "../src/assets/hat.png",
       path: "/shop/accessories",
     },
     {
       id: 6,
       title: "Sunglasses",
-      image: "/images/categories/sunglasses.jpg",
+      image: "../src/assets/866f7367-47f2-4b55-ac11-922377577257.png",
       path: "/shop/sunglasses",
     },
     {

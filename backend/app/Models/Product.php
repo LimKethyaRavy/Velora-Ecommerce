@@ -16,12 +16,14 @@ class Product extends Model
         'slug',
         'description',
         'base_price',
-        'is_active'
+        'is_active',
+        'tags'
     ];
 
 
     protected $casts = [
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
+        'tags' => 'array',
     ];
 
     public function Category()

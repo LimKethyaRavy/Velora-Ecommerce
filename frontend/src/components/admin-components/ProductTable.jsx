@@ -47,10 +47,11 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[960px] text-left text-sm">
+      <table className="w-full min-w-[1080px] text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-5 py-4">Product</th>
+            <th className="px-5 py-4">Tags</th>
             <th className="px-5 py-4">Variants</th>
             <th className="px-5 py-4">Category</th>
             <th className="px-5 py-4">Price</th>
@@ -62,6 +63,11 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
         <tbody className="divide-y divide-slate-100">
           {products.map((product) => {
             const variants = product.product_variant ?? [];
+            const tags = Array.isArray(product.tags)
+              ? product.tags.filter(
+                  (tag) => typeof tag === "string" && tag.trim(),
+                )
+              : [];
             const colors = [
               ...new Map(
                 variants
@@ -113,6 +119,31 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
                       </div>
                     </div>
                   </div>
+                </td>
+                <td className="px-5 py-4">
+                  {tags.length ? (
+                    <div
+                      className="flex max-w-56 flex-wrap gap-1.5"
+                      title={tags.join(", ")}
+                      aria-label={`Tags: ${tags.join(", ")}`}
+                    >
+                      {tags.slice(0, 3).map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-700"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {tags.length > 3 && (
+                        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                          +{tags.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">—</span>
+                  )}
                 </td>
                 <td className="px-5 py-4">
                   {colors.length ? (

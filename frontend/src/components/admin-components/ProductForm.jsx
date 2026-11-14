@@ -20,6 +20,7 @@ const fieldClass =
   "focus:border-[#5b2d8e] focus:ring-2 focus:ring-[#5b2d8e]/15";
 
 const labelClass = "block text-sm font-medium text-[#1f1b2d]";
+const suggestedTags = ["trending", "limited_edition"];
 
 const emptyVariant = () => ({
   clientKey: `variant-${++nextVariantKey}`,
@@ -43,6 +44,9 @@ const normalizeProduct = (product = {}) => {
     description: source.description ?? "",
     base_price: source.base_price ?? "",
     is_active: source.is_active ?? true,
+    tags: Array.isArray(source.tags)
+      ? source.tags.filter((tag) => typeof tag === "string")
+      : [],
 
     product_variants:
       Array.isArray(productVariants) && productVariants.length > 0
@@ -105,6 +109,7 @@ export default function ProductForm({
   const [form, setForm] = useState(() => normalizeProduct(initialValues));
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [tagInput, setTagInput] = useState("");
   const [previews, setPreviews] = useState([]);
   const [selectedImageVariantKey, setSelectedImageVariantKey] =
     useState("__general__");
@@ -121,6 +126,7 @@ export default function ProductForm({
 
   useEffect(() => {
     setForm(normalizeProduct(initialValues));
+    setTagInput("");
     setExistingImages(initialValues?.product_image || []);
     setRemovedImageIds([]);
     setPrimaryImageId(
@@ -143,6 +149,26 @@ export default function ProductForm({
       ...current,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const addTag = (value = tagInput) => {
+    const tag = value.trim().toLowerCase().replace(/\s+/g, "_");
+    if (!tag) return;
+
+    setForm((current) => ({
+      ...current,
+      tags: current.tags.some((currentTag) => currentTag.toLowerCase() === tag)
+        ? current.tags
+        : [...current.tags, tag],
+    }));
+    setTagInput("");
+  };
+
+  const handleTagKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      addTag();
+    }
   };
 
   const handleNameChange = (event) => {
@@ -210,6 +236,7 @@ export default function ProductForm({
       ].forEach((key) => formData.append(key, form[key]));
 
       formData.append("is_active", form.is_active ? "1" : "0");
+      formData.append("tags", JSON.stringify(form.tags));
       form.product_variants.forEach((variant, index) => {
         Object.entries(variant)
           .filter(([key]) => key !== "clientKey")
@@ -597,6 +624,79 @@ export default function ProductForm({
                 </div>
                 <FieldError message={errors.base_price?.[0]} />
               </label>
+            </Section>
+
+            <Section
+              title="Tags"
+              hint="Add labels such as trending or limited edition for storefront filters."
+            >
+              <div className="flex gap-2">
+                <input
+                  value={tagInput}
+                  onChange={(event) => setTagInput(event.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  maxLength={50}
+                  className={fieldClass}
+                  placeholder="Type a tag and press Enter"
+                  aria-label="Add product tag"
+                />
+                <button
+                  type="button"
+                  onClick={() => addTag()}
+                  className="mt-1.5 shrink-0 rounded-md border border-[#e4e1ec] px-3 text-sm font-medium text-[#5b2d8e] transition hover:border-[#5b2d8e] hover:bg-[#5b2d8e]/5"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {suggestedTags
+                  .filter(
+                    (tag) =>
+                      !form.tags.some(
+                        (currentTag) => currentTag.toLowerCase() === tag,
+                      ),
+                  )
+                  .map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => addTag(tag)}
+                      className="rounded-full border border-[#e4e1ec] px-3 py-1.5 text-xs font-medium text-[#6b6880] transition hover:border-[#5b2d8e] hover:text-[#5b2d8e]"
+                    >
+                      + {tag}
+                    </button>
+                  ))}
+              </div>
+              {form.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2" aria-label="Selected tags">
+                  {form.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center gap-1 rounded-full bg-[#5b2d8e]/10 px-3 py-1.5 text-xs font-medium text-[#5b2d8e]"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            tags: current.tags.filter(
+                              (currentTag) => currentTag !== tag,
+                            ),
+                          }))
+                        }
+                        aria-label={`Remove ${tag} tag`}
+                        className="rounded-full p-0.5 hover:bg-[#5b2d8e]/15"
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <FieldError
+                message={errors.tags?.[0] ?? errors["tags.0"]?.[0]}
+              />
             </Section>
 
             <Section

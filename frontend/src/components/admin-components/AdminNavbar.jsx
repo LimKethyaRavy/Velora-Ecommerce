@@ -1,13 +1,21 @@
-import { Bell, Calendar, ChevronDown, ExternalLink, Menu, Search, User } from 'lucide-react';
-import React, { useState } from 'react';
-
+import {
+  Bell,
+  Calendar,
+  ChevronDown,
+  ExternalLink,
+  Menu,
+  Search,
+  User,
+} from "lucide-react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 const AdminNavbar = ({ isOpen, setIsOpen }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const currentDate = new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    date: 'numeric',
-    year: 'numeric',
+  const currentDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    date: "numeric",
+    year: "numeric",
   })
     .format(new Date())
     .toLocaleUpperCase();
@@ -46,8 +54,13 @@ const AdminNavbar = ({ isOpen, setIsOpen }) => {
           <div className="h-5 w-px bg-gray-200" />
 
           <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-2 text-xs font-bold uppercase tracking-wider text-gray-800 transition-colors hover:bg-gray-50">
-            Storefront
-            <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+            <Link
+              to="/home"
+              className="flex items-center gap-1.5 rounded-lg border-gray-300 py-2 text-xs"
+            >
+              Storefront
+              <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+            </Link>
           </button>
 
           <button className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white transition-opacity hover:opacity-90">
@@ -69,7 +82,7 @@ const AdminNavbar = ({ isOpen, setIsOpen }) => {
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             className="shrink-0 rounded-lg border border-gray-200 p-2 text-gray-700 hover:text-black focus:outline-none"
-            aria-label={isOpen ? 'Close admin sidebar' : 'Open admin sidebar'}
+            aria-label={isOpen ? "Close admin sidebar" : "Open admin sidebar"}
             aria-expanded={isOpen}
             aria-controls="admin-sidebar"
           >
@@ -80,12 +93,14 @@ const AdminNavbar = ({ isOpen, setIsOpen }) => {
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="shrink-0 rounded-lg border border-gray-200 p-2 text-gray-700 hover:text-black focus:outline-none"
-            aria-label={mobileMenuOpen ? 'Close mobile options' : 'Open mobile options'}
+            aria-label={
+              mobileMenuOpen ? "Close mobile options" : "Open mobile options"
+            }
             aria-expanded={mobileMenuOpen}
             aria-controls="admin-mobile-options"
           >
             <ChevronDown
-              className={`h-5 w-5 transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`}
+              className={`h-5 w-5 transition-transform ${mobileMenuOpen ? "rotate-180" : ""}`}
             />
           </button>
         </div>
@@ -121,8 +136,13 @@ const AdminNavbar = ({ isOpen, setIsOpen }) => {
             </button>
 
             <button className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-800">
-              Storefront
-              <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+              <Link
+                to="/home"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-800"
+              >
+                Storefront
+                <ExternalLink className="h-3.5 w-3.5 text-gray-500" />
+              </Link>
             </button>
           </div>
         </div>

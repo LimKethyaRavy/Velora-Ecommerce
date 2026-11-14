@@ -36,6 +36,15 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        if ($request->filled('tag')) {
+            $query->whereJsonContains('tags', $request->input('tag'));
+        }
+
+        if($request->boolean('new_arrival')){
+
+            $query->where('created_at', '>=', now()->subDays(14));
+        }
+
         $prodcut = $query->paginate(5);
 
         return response()->json([
@@ -47,6 +56,7 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
+        $this->decodeTagsInput($request);
 
         $requestedVariants = $request->input('product_variants', []);
         $variantIndexes = is_array($requestedVariants)
@@ -68,7 +78,9 @@ class ProductController extends Controller
             'product_variants.*.color' => 'required|string|max:50',
             'product_variants.*.price' => 'required|numeric|min:0',
             'product_variants.*.stock_quantity' => 'required|integer|min:0',
-
+            
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
             'image_variant_indexes' => 'nullable|array',
@@ -194,6 +206,7 @@ class ProductController extends Controller
     public function update(Request $request, string $id)
     {
         $prodcut = Product::findOrFail($id);
+        $this->decodeTagsInput($request);
 
         $requestedVariants = $request->input('product_variants', []);
         $variantIndexes = is_array($requestedVariants)
@@ -230,7 +243,8 @@ class ProductController extends Controller
             'product_variants.*.color' => 'required|string|max:50',
             'product_variants.*.price' => 'required|numeric|min:0',
             'product_variants.*.stock_quantity' => 'required|integer|min:0',
-
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:50',
             'images' => 'nullable|array',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
             'image_variant_indexes' => 'nullable|array',
@@ -273,6 +287,7 @@ class ProductController extends Controller
                 $variants = $validated['product_variants'] ?? [];
 
                 $productData = $validated;
+                $productData['tags'] = $validated['tags'] ?? $prodcut->tags ?? [];
 
                 unset(
                     $productData['product_variants'],
@@ -421,6 +436,19 @@ class ProductController extends Controller
                 'success' => false,
                 'message' => 'Failed to update product'
             ], 500);
+        }
+    }
+
+    private function decodeTagsInput(Request $request): void
+    {
+        $tags = $request->input('tags');
+        if (!is_string($tags)) {
+            return;
+        }
+
+        $decodedTags = json_decode($tags, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decodedTags)) {
+            $request->merge(['tags' => $decodedTags]);
         }
     }
 
