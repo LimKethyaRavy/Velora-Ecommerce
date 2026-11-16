@@ -26,7 +26,7 @@ const ShopByCategory = () => {
     {
       id: 4,
       title: "Shoes",
-      image: "/images/categories/shoes.jpg",
+      image: "../src/assets/74c04f9cd651cc84fd9b61c2eee3958d.jpg_720x720q80.jpg",
       path: "/shop/shoes",
     },
     {
@@ -44,13 +44,13 @@ const ShopByCategory = () => {
     {
       id: 7,
       title: "Lifestyle",
-      image: "/images/categories/lifestyle.jpg",
+      image: "../src/assets/images (5).jpg",
       path: "/shop/lifestyle",
     },
     {
       id: 8,
       title: "Essentials",
-      image: "/images/categories/essentials.jpg",
+      image: "../src/assets/images (3).jpg",
       path: "/shop/essentials",
     },
   ];
