@@ -40,11 +40,27 @@ function ProductFormPage() {
           getSupplier(),
         ]);
 
-        setCategories(
-          Array.isArray(categoryResponse?.data)
-            ? categoryResponse.data
-            : (categoryResponse?.data?.data ?? []),
+        const firstCategoryPage = categoryResponse?.data ?? categoryResponse;
+        const firstCategoryRows = Array.isArray(firstCategoryPage?.data)
+          ? firstCategoryPage.data
+          : Array.isArray(firstCategoryPage)
+            ? firstCategoryPage
+            : [];
+        const lastCategoryPage = Number(firstCategoryPage?.last_page ?? 1);
+        const remainingCategoryResponses = await Promise.all(
+          Array.from({ length: Math.max(0, lastCategoryPage - 1) }, (_, index) =>
+            getCategory({ page: index + 2, search: "" }),
+          ),
         );
+        const allCategories = [
+          ...firstCategoryRows,
+          ...remainingCategoryResponses.flatMap((response) => {
+            const page = response?.data ?? response;
+            return Array.isArray(page?.data) ? page.data : [];
+          }),
+        ];
+
+        setCategories(allCategories);
         setSuppliers(
           Array.isArray(supplierResponse?.data)
             ? supplierResponse.data

@@ -45,7 +45,7 @@ class ProductController extends Controller
             $query->where('created_at', '>=', now()->subDays(14));
         }
 
-        $prodcut = $query->paginate(5);
+        $prodcut = $query->paginate(10);
 
         return response()->json([
             'success' => true,

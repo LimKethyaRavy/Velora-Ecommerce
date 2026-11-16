@@ -89,7 +89,7 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
               product.primary_image ??
               product.product_image?.find((i) => i.is_primary) ??
               product.product_image?.[0];
-            // image_url must be a public/signed URL, not a private S3 object key.
+           
             const src =
               primary?.public_url ??
               (primary?.image_url?.startsWith("http")
@@ -221,10 +221,9 @@ export default function ProductTable({ products, loading, onEdit, onDelete }) {
                       aria-label={`Edit ${product.name}`}
                       className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-violet-50 hover:text-violet-700"
                     >
-                      <Pencil size={16} />
 
-                   
-                      
+                      <Pencil size={16} />
+ 
                     </button>
                     <button
                       onClick={() => onDelete(product)}

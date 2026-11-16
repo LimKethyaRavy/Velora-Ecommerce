@@ -200,13 +200,15 @@ export default function ProductFeature() {
               Manage your fashion catalog, inventory, and availability.
             </p>
           </div>
+
           <button
             type="button"
             onClick={() => navigate("/admin/products/create")}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:bg-violet-700"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-violet-200 transition hover:to-blue-950"
           >
             <Plus size={18} /> Add Product
           </button>
+ 
         </header>
 
         <section

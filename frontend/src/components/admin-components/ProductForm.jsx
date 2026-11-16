@@ -298,6 +298,25 @@ export default function ProductForm({
   };
 
   const isEdit = mode === "edit";
+  const selectedCategory = categories.find(
+    (category) => String(category.id) === String(form.category_id),
+  );
+  const selectedParentCategoryId =
+    selectedCategory?.parent_id ?? selectedCategory?.id ?? "";
+  const parentCategories = categories.filter(
+    (category) =>
+      category.parent_id === null || category.parent_id === undefined,
+  );
+  const subCategories = categories.filter(
+    (category) =>
+      category.parent_id !== null &&
+      category.parent_id !== undefined &&
+      (!selectedParentCategoryId ||
+        String(category.parent_id) === String(selectedParentCategoryId)),
+  );
+  const categoryNames = new Map(
+    categories.map((category) => [String(category.id), category.name]),
+  );
   const submitLabel = saving
     ? "Saving…"
     : isEdit
@@ -570,19 +589,56 @@ export default function ProductForm({
                 Category
                 <select
                   name="category_id"
-                  value={form.category_id}
+                  value={selectedParentCategoryId}
                   onChange={handleChange}
                   className={fieldClass}
                   required
                 >
                   <option value="">Select a category</option>
-                  {categories.map((category) => (
+                  {parentCategories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
                 <FieldError message={errors.category_id?.[0]} />
+              </label>
+
+              <label className={labelClass}>
+                Sub-category
+                <select
+                  value={
+                    selectedCategory?.parent_id !== null &&
+                    selectedCategory?.parent_id !== undefined
+                      ? form.category_id
+                      : ""
+                  }
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      category_id:
+                        event.target.value || selectedParentCategoryId,
+                    }))
+                  }
+                  className={fieldClass}
+                >
+                  <option value="">
+                    {selectedParentCategoryId
+                      ? subCategories.length
+                        ? "None (use category)"
+                        : "No sub-categories available"
+                      : subCategories.length
+                        ? "Select a sub-category"
+                        : "No sub-categories available"}
+                  </option>
+                  {subCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {selectedParentCategoryId
+                        ? category.name
+                        : `${categoryNames.get(String(category.parent_id)) ?? "Category"} / ${category.name}`}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label className={labelClass}>
