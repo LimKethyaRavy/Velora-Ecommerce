@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { getProduct } from "../../../service/productService";
-import ProductCardSkeleton from "./ProductCardSkeleton";
+import ProductCardSkeleton from "../../../components/skeletons/ProductCardSkeleton";
 
 const formatPrice = (value) =>
   new Intl.NumberFormat("en-US", {
@@ -8,7 +8,7 @@ const formatPrice = (value) =>
     currency: "USD",
   }).format(Number(value ?? 0));
 
-/* ---------- Icons (inline SVG, no extra dependency) ---------- */
+
 const HeartIcon = ({ filled }) => (
   <svg
     viewBox="0 0 24 24"
