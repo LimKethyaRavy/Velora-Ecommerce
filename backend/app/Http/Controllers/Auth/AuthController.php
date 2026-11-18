@@ -144,9 +144,13 @@ class AuthController extends Controller
 
     public function redirectToGoogle() {
 
-    return Socialite::driver('google');
+      /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+
+    $driver = Socialite::driver('google');
 
     return $driver->stateless()->redirect();
+
+   
 
     }
 
@@ -162,32 +166,32 @@ class AuthController extends Controller
 
     $googleUser = $driver->stateless()->user();
 
-    $user = User::where('email', strtolower($googleUser->getEmail()))->first();
+    if(!$googleUser->getEmail()) {
+        throw new \Exception('
+        Google account does not provide an email
+        ');
+    }
 
-    $user->updateorCreate([
+    $user = User::updateorCreate([
+
+    // ==============use to find user email================
 
     'email' => $googleUser->getEmail(),
+    ],
+    [
     'name' => $googleUser->getName(),
     'google_id' => $googleUser->getId(),
     'avatar' => $googleUser->getAvatar()
+    
     ]);
 
+    $token = $user->createToken('auth_token')->plainTextToken;
 
-
-
-   
-    
-
-   
+    return redirect()->away("{$frontendUrl}/callback?token={$token}");
 
     }catch(Exception $e){
 
-      return response()->json([
-        'success' => false,
-        'message' => 'Error'.$e
-        
-    ], 500);
-
+      return redirect()->away("{$frontendUrl}/login?error=" . urlencode($e->getMessage()));
      }
 
 

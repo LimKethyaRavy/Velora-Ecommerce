@@ -31,6 +31,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 });
 
+Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
+
+Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallBack']);
 
 Route::get('/suppliers/all', [SupplierController::class, 'index'])->name('suppliers.index');
 
