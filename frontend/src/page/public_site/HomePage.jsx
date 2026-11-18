@@ -6,6 +6,7 @@ import ShopByCategory from '../../components/public-site-components/ShopByCatego
 import ProductTrending from '../../components/trendingProduct/ProductTrending'
 import NewInProduct from '../../components/NewInProduct/NewInProduct'
 import CollectionCard from '../../components/COLLECTION/CollectionCard'
+import Footer from '../../components/FOOTER/Footer'
 
 const HomePage = () => {
   return (
@@ -22,6 +23,8 @@ const HomePage = () => {
             <NewInProduct />
 
             <CollectionCard />
+
+            <Footer/>
         </div>
     </div>
   )

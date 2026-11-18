@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Hash;
-
-
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -141,4 +141,57 @@ class AuthController extends Controller
 
     }
     }
+
+    public function redirectToGoogle() {
+
+    return Socialite::driver('google');
+
+    return $driver->stateless()->redirect();
+
+    }
+
+    public function handleGoogleCallBack() {
+
+    $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+
+    try {
+
+     /** @var \Laravel\Socialite\Two\AbstractProvider $driver */
+
+    $driver = Socialite::driver('google');
+
+    $googleUser = $driver->stateless()->user();
+
+    $user = User::where('email', strtolower($googleUser->getEmail()))->first();
+
+    $user->updateorCreate([
+
+    'email' => $googleUser->getEmail(),
+    'name' => $googleUser->getName(),
+    'google_id' => $googleUser->getId(),
+    'avatar' => $googleUser->getAvatar()
+    ]);
+
+
+
+
+   
+    
+
+   
+
+    }catch(Exception $e){
+
+      return response()->json([
+        'success' => false,
+        'message' => 'Error'.$e
+        
+    ], 500);
+
+     }
+
+
+    }
+
+
 }
