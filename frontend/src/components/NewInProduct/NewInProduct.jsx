@@ -1,13 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { getProduct } from "../../../service/productService";
-import ProductCardSkeleton from "../../../components/skeletons/ProductCardSkeleton";
-
+import React from "react";
+import { useState, useEffect, useCallback } from "react";
+import ProductCardSkeleton from "../skeletons/ProductCardSkeleton";
+import { getProduct } from "../../service/productService";
 const formatPrice = (value) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   }).format(Number(value ?? 0));
-
 
 const HeartIcon = ({ filled }) => (
   <svg
@@ -55,10 +54,6 @@ const CheckIcon = () => (
     <path d="M20 6 9 17l-5-5" />
   </svg>
 );
-
-/* ---------- Color swatches ----------
-   Reads product.colors (array of "#hex" strings or objects such as
-   { name, hex } / { name, color_code }). Renders nothing if there are none. */
 const MAX_SWATCHES = 4;
 
 const getSwatch = (color) => {
@@ -95,8 +90,12 @@ const ColorSwatches = ({ colors }) => {
   );
 };
 
-/* ---------- Product card ---------- */
-const ProductCard = ({ product, isWishlisted, onToggleWishlist, onAddToCart }) => {
+const ProductCard = ({
+  product,
+  isWishlisted,
+  onToggleWishlist,
+  onAddToCart,
+}) => {
   const [added, setAdded] = useState(false);
 
   const primaryImage =
@@ -217,8 +216,7 @@ const ProductCard = ({ product, isWishlisted, onToggleWishlist, onAddToCart }) =
   );
 };
 
-/* ---------- Section ---------- */
-const ProductTrending = () => {
+const NewInProduct = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -229,7 +227,7 @@ const ProductTrending = () => {
 
     const fetchTrendingProducts = async () => {
       try {
-        const response = await getProduct({ tag: "trending" });
+        const response = await getProduct({ tag: "new" });
         const paginator = response?.data;
         const rows = Array.isArray(paginator?.data)
           ? paginator.data
@@ -245,7 +243,7 @@ const ProductTrending = () => {
           setError(
             requestError?.response?.data?.message ??
               requestError?.message ??
-              "Could not load trending products.",
+              "Could not load new products.",
           );
         }
       } finally {
@@ -279,7 +277,7 @@ const ProductTrending = () => {
   return (
     <section className="container mx-auto px-4 py-8 sm:py-10">
       <h2 className="mb-5 text-xl font-bold sm:mb-6 sm:text-2xl">
-        Trending Products
+        New in Product
       </h2>
 
       {error ? (
@@ -294,7 +292,7 @@ const ProductTrending = () => {
             ))
           ) : products.length === 0 ? (
             <p className="col-span-full text-sm text-gray-500">
-              No trending products found.
+              No new products found.
             </p>
           ) : (
             products.map((product) => (
@@ -313,4 +311,4 @@ const ProductTrending = () => {
   );
 };
 
-export default ProductTrending;
+export default NewInProduct;
