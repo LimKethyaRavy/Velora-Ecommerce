@@ -1,5 +1,6 @@
 import React from "react";
 import { ChevronDown, Globe, Tag } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const AccouncementBar = () => {
   return (
@@ -26,7 +27,12 @@ const AccouncementBar = () => {
                   href="/login"
                   className="hover:text-gray-300 transition-colors"
                 >
-                  Login
+
+                  <Link to="/login">
+
+                     Login
+                  </Link>
+               
                 </a>
 
                 <span className="text-gray-500">|</span>
@@ -35,7 +41,12 @@ const AccouncementBar = () => {
                   href="/register"
                   className="hover:text-gray-300 transition-colors"
                 >
-                  Register
+
+                  <Link to ="/register">
+
+                   Register
+                  </Link>
+                 
                 </a>
               </div>
 

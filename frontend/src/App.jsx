@@ -22,6 +22,8 @@ import { showProduct } from "./service/productService";
 import LoginScreen from "./page/admin/auth/LoginScreen";
 import HomePage from "./page/public_site/HomePage";
 import CategoryForm from "./page/admin/category/CategoryForm";
+import Register from "./page/public_site/Auth-PublicSite/Register";
+import Login from "./page/public_site/Auth-PublicSite/Login";
 
 function ProductFormPage() {
   const navigate = useNavigate();
@@ -107,6 +109,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<PublicLayout />}>
+          <Route path="/register" element={<Register />} />
+
+          <Route path="/login" element={<Login />} />
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="home" element={<HomePage />} />
           <Route path="shop" element={<Navigate to="/shop/home" replace />} />
@@ -118,6 +123,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Navigate to="/admin/login" replace />} />
 
+        
           <Route path="storefront" element={<HomePage />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ProductFeature />} />
